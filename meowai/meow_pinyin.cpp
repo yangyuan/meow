@@ -25,15 +25,118 @@ static const WCHAR * PINYIN_SPLIC[4] = { L"aaeo", L"eaejoqx", L"oejoqvx", L"nbcd
 static const UINT PINYIN_SPLID_LEN = 34;
 static const WCHAR PINYIN_SPLID[34][4] = { L"ib", L"ihc", L"ic", L"id", L"ij", L"il", L"im", L"in", L"ip", L"iq", L"ihs", L"is", L"it", L"ix", L"iy", L"ihz", L"ub", L"uc", L"ud", L"uf", L"ug", L"uj", L"uk", L"ul", L"un", L"uq", L"ur", L"us", L"ut", L"uw", L"uy", L"uz", L"vl", L"vn" };
 
-
-
 MeowPinyin::MeowPinyin()
 {
 }
 
-
 MeowPinyin::~MeowPinyin()
 {
+}
+
+
+unsigned int MeowPinyin::Solute(WCHAR * _input) {
+	if (input == NULL) return 0;
+	unsigned int len = wcslen(input);
+	if (len < maxlength) {
+		wcsncpy_s(input, _input, len);
+		length = len;
+	}
+	else {
+		wcsncpy_s(input, _input, maxlength-1);
+		length = maxlength-1;
+		input[maxlength-1] = L'\0';
+	}
+
+	DoSplitIntoSegments();
+	return 1;
+}
+void MeowPinyin::DoSplitIntoSegments() {
+	unsigned int i = 0;
+	unsigned int j = 0;
+	unsigned int k = 0;
+	unsigned int result[maxlength] {0};
+
+	bool added = false;
+	result[0] = 1; // 0
+	for (i = 1; i < length; i++) { // start with 1
+		added = false;
+		for (j = 0; j < PINYIN_SPLIA_LEN; j++) {
+			if (input[i] == PINYIN_SPLIA[j]) {
+				result[i] = 1;
+				added = true;
+				break;
+			}
+		}
+		if (added) continue;
+		for (j = 0; j < PINYIN_SPLIB_LEN; j++) {
+			if (input[i] == PINYIN_SPLIB[j][0]) {
+				for (unsigned int offset = 1; offset < 5; offset++) {
+					if (i - 1 < 0) break;
+					if (PINYIN_SPLIB[j][offset] == L'\0') {
+						result[i] = 1;
+						added = true;
+						break;
+					}
+					if (PINYIN_SPLIB[j][offset] == input[i - 1]) {
+						break;
+					}
+				}
+				break;
+			}
+		}
+		if (added) continue;
+		for (j = 0; j < PINYIN_SPLIC_LEN; j++) {
+			if (input[i] == PINYIN_SPLIC[j][0]) {
+				for (unsigned int offset = 1; offset < maxlength; offset++) {
+					if (i - 1 < 0) break;
+					if (PINYIN_SPLIC[j][offset] == L'\0') {
+						break;
+					}
+					if (PINYIN_SPLIC[j][offset] == input[i - 1]) {
+						result[i] = 1;
+						added = true;
+						break;
+					}
+				}
+				break;
+			}
+		}
+		if (added) continue;
+		for (j = 0; j < PINYIN_SPLID_LEN; j++) {
+			bool match = false;
+			for (unsigned int offset = 0; offset < 4; offset++) {
+				if (i - offset < 0) break;
+				if (PINYIN_SPLID[j][offset] == L'\0') {
+					match = true;
+					result[i - offset + 1] = 1;
+					break;
+				}
+				if (PINYIN_SPLID[j][offset] != input[i - offset]) {
+					break;
+				}
+			}
+			if (match) break;
+		}
+	}
+	// s  h  u  r  u  f  a  0
+	//[1, 0, 0, 1, 0, 1, 0, 0] to [3, 0, 0, 2, 0, 2, 0, 0]
+	unsigned int last = 0;
+	for (i = 1; i <= length; i++) { // start from 1
+		if (i == length) { // last one or 1
+			result[last] = length - last;
+			result[length] = 0;
+		}
+		else if (result[i] == 1) {
+			result[last] = i - last;
+			last = i;
+
+			PinyinSegment seg;
+			seg.index = last;
+			seg.length = i - last;
+			segments.Add(seg);
+		}
+	}
+	return 1;
 }
 
 bool match(WCHAR * input, CONST WCHAR * target) {
@@ -240,18 +343,3 @@ void MeowPinyin::split(WCHAR * input) {
 	}
 	wprintf(L"\n");
 }
-
-
-typedef struct  {
-	bool is_quanpin;
-	bool is_quanpin_perfix;
-	unsigned int length;
-	unsigned int result_error[8][128];
-} PinyinSplitNode;
-
-
-struct PinyinSplits {
-	bool has_quanpin;
-	bool has_quanpin_perfix;
-	PinyinSplitNode * nodes;
-};

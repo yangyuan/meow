@@ -8,6 +8,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		MeowPinyin::split(argv[1]);
 	}
 	else {
+
+		MeowPinyin * mp = new MeowPinyin();
+		mp->Solute(L"shurufawenan");
+
 		MeowPinyin::split(L"wenan");
 		MeowPinyin::split(L"shurufa");
 		MeowPinyin::split(L"shuo");
