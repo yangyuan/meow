@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meow", "meow\meow.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meowui", "meowui\meowui.vcxproj", "{7DE8E633-72AC-43EE-B2EC-07720F80497E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meowai", "meowai\meowai.vcxproj", "{C5480783-F67B-4672-A353-62EDF941078D}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meow-cli", "meow-cli\meow-cli.vcxproj", "{EF564FEE-87C2-4A01-AE7C-10F052FA461B}"
 EndProject
 Global
@@ -25,10 +23,6 @@ Global
 		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Debug|Win32.Build.0 = Debug|Win32
 		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Release|Win32.ActiveCfg = Release|Win32
 		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Release|Win32.Build.0 = Release|Win32
-		{C5480783-F67B-4672-A353-62EDF941078D}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C5480783-F67B-4672-A353-62EDF941078D}.Debug|Win32.Build.0 = Debug|Win32
-		{C5480783-F67B-4672-A353-62EDF941078D}.Release|Win32.ActiveCfg = Release|Win32
-		{C5480783-F67B-4672-A353-62EDF941078D}.Release|Win32.Build.0 = Release|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Debug|Win32.Build.0 = Debug|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Release|Win32.ActiveCfg = Release|Win32
