@@ -14,6 +14,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	hinstance = hInstance;
 
+	ULONG_PTR gdiplustoken;
+	Gdiplus::GdiplusStartupInput gdiplusstartupinput;
+	Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
+
 	WNDCLASSEX wcex;
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -39,7 +43,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	{
 		return 0;
 	}
-
+	
 	ShowWindow(hwndmain, nCmdShow);
 	UpdateWindow(hwndmain);
 
@@ -75,7 +79,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			mwm->HideStatusWindow();
 			break;
 		case ID_DEBUG_SETCOMPOSITIONTEXT:
-			mwm->SetCompositionText(_T("shurufa"));
+		{
+			RECT rect;
+			GetWindowRect(hWnd, &rect);
+			rect.left += 16;
+			rect.bottom = rect.top + 72;
+			mwm->AdjustCompositionWindow(&rect, _T("shurufa"));
+		}
 			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
@@ -93,3 +103,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
+/*
+
+
+
+
+
+
+
+// WS_EX_LAYERED
+RECT wndRect;
+::GetWindowRect(hwndmain, &wndRect);
+SIZE wndSize = { wndRect.right - wndRect.left, wndRect.bottom - wndRect.top };
+HDC hdc = ::GetDC(hwndmain);
+HDC memDC = ::CreateCompatibleDC(hdc);
+HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, wndSize.cx, wndSize.cy);
+::SelectObject(memDC, memBitmap);
+Gdiplus::Image image(L"C:\\pic.png");
+Gdiplus::Graphics graphics(memDC);
+graphics.DrawImage(&image, 0, 0, wndSize.cx, wndSize.cy);
+
+HDC screenDC = GetDC(NULL);
+POINT ptSrc = { 0, 0 };
+BLENDFUNCTION blendFunction;
+blendFunction.AlphaFormat = AC_SRC_ALPHA;
+blendFunction.BlendFlags = 0;
+blendFunction.BlendOp = AC_SRC_OVER;
+blendFunction.SourceConstantAlpha = 255;
+UpdateLayeredWindow(hwndmain, screenDC, &ptSrc, &wndSize, memDC, &ptSrc, 0, &blendFunction, 2);
+//SetLayeredWindowAttributes(hwndmain, RGB(255, 0, 0), 0, LWA_COLORKEY);
+::DeleteDC(memDC);
+::DeleteObject(memBitmap);
+
+*/

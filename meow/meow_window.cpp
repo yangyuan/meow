@@ -179,7 +179,7 @@ LRESULT CALLBACK MeowWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			{
 				POINT point;
 				point.x = me->pointnow.x - me->pointcaptureclient.x;
-				point.x = me->pointnow.y - me->pointcaptureclient.y;
+				point.y = me->pointnow.y - me->pointcaptureclient.y;
 				WndSetPos(me->hwnd, &point);
 			}
 		}

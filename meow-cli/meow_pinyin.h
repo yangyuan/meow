@@ -91,6 +91,8 @@ private:
 	void LoadDictChars();
 	void LoadDictBasic();
 
+
+
 	// what user input (original)
 	WCHAR input[MEOW_MAXLENGTH];
 	unsigned int inputlength;
@@ -115,10 +117,18 @@ private:
 	// `blob` are memory data, hard-coded or directlly loaded from file.
 	// `table` is used to make index small, index usually has an UINT32 offset and UINT8 length of table
 	// `tree` is usually a tree index of data 
-	std::vector<UINT8>                table_pinyin;
+	std::vector<UINT16>               table_pinyin;
 	MEOW_CHARACTER_NODE               table_character[0xFFFF];
 	void *                            blob_phrase;
 	std::vector<MEOW_PHRASE_NODE>     table_phrase; // 445494
 	std::vector<MEOW_PHRASETREE_NODE> tree_phrase;
 };
 
+
+class MeowPinyinDictionary
+{
+public:
+	void LoadSource() {};
+	void LoadBinary() {};
+	void DumpBinary() {};
+};
