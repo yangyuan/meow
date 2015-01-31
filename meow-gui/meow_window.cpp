@@ -26,7 +26,7 @@ MeowWindowManager::MeowWindowManager(HINSTANCE _hinstance)  {
 	hinstance = _hinstance;
 	impl_status = NULL;
 	window_status = NULL;
-
+	new MeowSkinDelegate(hinstance);
 	HANDLE uithread = CreateThread(NULL, 0, MeowWindowManager::ThreadProc, this, 0, NULL);
 };
 
@@ -272,6 +272,9 @@ LRESULT CALLBACK MeowWindow::FlowButtonProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 		break;
 	case WM_LBUTTONUP:
 		SendMessage(mwfb->parent->hwnd, WM_LBUTTONUP, wParam, lParam);
+		break;
+	case WM_ERASEBKGND:
+		return TRUE;
 	}
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -298,27 +301,13 @@ VOID MeowStatusWindow::WndInit(HWND hwnd, MeowWindow * me) {
 	mwfb.memu = (HMENU)3;
 	buttons.push_back(mwfb);
 	unsigned int count = buttons.size();
-	unsigned int size = 32;
+	unsigned int size = 28;
 	SetWindowPos(hwnd, NULL, 0, 0, size * count + 2, size + 2, SWP_NOMOVE);
 
 	for (unsigned int i = 0; i < count; i++) {
 		buttons[i].hwnd = CreateWindow(L"BUTTON", mwfb.tooltip, WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, size*i + 1, 1, size, size, hwnd, buttons[i].memu, NULL, NULL);
 		SetWindowSubclass(buttons[i].hwnd, MeowWindow::FlowButtonProc, 0, (DWORD_PTR)&buttons[i]);
 	}
-	/*
-	HWND button1 = CreateWindow(L"BUTTON", L"", WS_VISIBLE | WS_CHILD | BS_ICON | BS_FLAT, 0, 0, 32, 32, hwnd, (HMENU)0, NULL, NULL);
-	SendMessage(button1, BM_SETIMAGE, IMAGE_ICON, (LPARAM)LoadImage(me->hinstance, MAKEINTRESOURCE(IDI_ICON_MAIN), IMAGE_ICON, 32, 32, NULL));
-	SetWindowSubclass(button1, MeowWindow::ButtonProc, 0, (DWORD_PTR)me);
-
-	HWND button2 = CreateWindow(L"BUTTON", L"", WS_VISIBLE | WS_CHILD | BS_ICON | BS_FLAT, 32, 0, 32, 32, hwnd, (HMENU)0, NULL, NULL);
-	SendMessage(button2, BM_SETIMAGE, IMAGE_ICON, (LPARAM)LoadImage(me->hinstance, MAKEINTRESOURCE(IDI_ICON_MAIN), IMAGE_ICON, 16, 16, NULL));
-	SetWindowSubclass(button2, MeowWindow::ButtonProc, 0, (DWORD_PTR)me);
-
-	HWND button3 = CreateWindow(L"BUTTON", L"", WS_VISIBLE | WS_CHILD | BS_ICON | BS_FLAT, 64, 0, 32, 32, hwnd, (HMENU)0, NULL, NULL);
-	SendMessage(button3, BM_SETIMAGE, IMAGE_ICON, (LPARAM)LoadImage(me->hinstance, MAKEINTRESOURCE(IDI_ICON_MAIN), IMAGE_ICON, 32, 32, NULL));
-	SetWindowSubclass(button3, MeowWindow::ButtonProc, 0, (DWORD_PTR)me);
-	*/
-	
 }
 
 VOID MeowStatusWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTSTRUCT * ps) {
@@ -334,14 +323,20 @@ VOID MeowStatusWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTSTRUCT
 }
 
 BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * ds) {
-	
-	MeowStatusWindow * parent = (MeowStatusWindow *)me->impl;
-	MEOW_WINDOW_FLOWBUTTON * button = &parent->buttons[ds->CtlID];
 
 	using namespace Gdiplus;
+	MeowStatusWindow * parent = (MeowStatusWindow *)me->impl;
+	MEOW_WINDOW_FLOWBUTTON * button = &parent->buttons[ds->CtlID];
+	HDC memDC = ::CreateCompatibleDC(ds->hDC);
 	RECT rect;
 	GetClientRect(hwnd, &rect);
-	Gdiplus::Graphics graphics(ds->hDC);
+	HBITMAP memBitmap = ::CreateCompatibleBitmap(ds->hDC, rect.right, rect.bottom);
+	SelectObject(memDC, memBitmap);
+	
+	//Gdiplus::Graphics graphics(ds->hDC);
+	Graphics graphics(memDC);
+
+
 	Gdiplus::SolidBrush brush_blue(Color(255, 34, 142, 230));
 	Gdiplus::SolidBrush brush_red(Color(255, 244, 47, 9));
 	Gdiplus::SolidBrush brush_normal(Color(255, 255, 255, 255)); // 247
@@ -371,16 +366,19 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 			graphics.FillRectangle(&brush_normal, 0, 0, rect.right, rect.bottom);
 		}
 	}
+
+	RectF dest = RectF(2, 2, 24, 24);
+
 	switch (ds->CtlID) {
 	case 1:{
 
 		if (button->state == 0) {
 			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_language.png");
-			graphics.DrawImage(&image, 0, 0, 0, 0, 32, 32, UnitPixel);
+			graphics.DrawImage(&image, dest, 0, 0, 32, 32, UnitPixel);
 		}
 		else {
 			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_language.png");
-			graphics.DrawImage(&image, 0, 0, 32, 0, 32, 32, UnitPixel);
+			graphics.DrawImage(&image, dest, 32, 0, 32, 32, UnitPixel);
 		}
 	}
 		   break;
@@ -388,28 +386,35 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 
 		if (button->state == 0) {
 			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_punctuation.png");
-			graphics.DrawImage(&image, 0, 0, 0, 0, 32, 32, UnitPixel);
+			graphics.DrawImage(&image, dest, 0, 0, 32, 32, UnitPixel);
 		}
 		else {
 			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_punctuation.png");
-			graphics.DrawImage(&image, 0, 0, 32, 0, 32, 32, UnitPixel);
+			graphics.DrawImage(&image, dest, 32, 0, 32, 32, UnitPixel);
 		}
 	}
 		   break;
 	case 3:{
 		Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\configure.png");
-		graphics.DrawImage(&image, 0, 0, 32, 32);
+		graphics.DrawImage(&image, 2, 2, 24, 24);
 
 	}
 		   break;
 	default:{
 
 		Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png"); // 
-		graphics.DrawImage(&image, 0, 0, 32, 32); // 4, 4, 24, 24
+		graphics.DrawImage(&image, 0, 0, 28, 28); // 4, 4, 24, 24
 
 	}
 		break;
 	}
+
+
+	
+	
+	BitBlt(ds->hDC, 0, 0, rect.right, rect.bottom, memDC, 0, 0, SRCCOPY);
+	DeleteDC(memDC);
+	DeleteObject(memBitmap);
 	return true;
 }
 
@@ -529,4 +534,33 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 	*/
+}
+
+
+MeowSkinDelegate::MeowSkinDelegate(HINSTANCE hinstance) {
+	WCHAR path[MAX_PATH] = { '\0' };
+	DWORD len = GetModuleFileName(hinstance, path, ARRAYSIZE(path));
+	root = L"";
+	while (len--)
+	{
+		if (path[len] == '\\' || path[len] == '/')
+		{
+			root.Append(path, len);
+			break;
+		}
+	}
+	root.Append(L"\\skin\\default\\");
+}
+MeowSkinDelegate::~MeowSkinDelegate() {
+
+}
+
+
+Gdiplus::Image * MeowSkinDelegate::GetImageByKey(UINT32 * key) {
+	Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png");
+	return &image;
+}
+Gdiplus::Image * MeowSkinDelegate::GetImageByName(WCHAR * name) {
+	Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png");
+	return &image;
 }

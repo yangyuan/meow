@@ -5,9 +5,9 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meow", "meow\meow.vcxproj", "{9A3063B0-B3DA-4EA3-8A86-03769280B05C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meowui", "meowui\meowui.vcxproj", "{7DE8E633-72AC-43EE-B2EC-07720F80497E}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meow-cli", "meow-cli\meow-cli.vcxproj", "{EF564FEE-87C2-4A01-AE7C-10F052FA461B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meow-gui", "meow-gui\meow-gui.vcxproj", "{7532C0BD-0DD1-4115-92AF-7036BB7B205C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,14 +19,14 @@ Global
 		{9A3063B0-B3DA-4EA3-8A86-03769280B05C}.Debug|Win32.Build.0 = Debug|Win32
 		{9A3063B0-B3DA-4EA3-8A86-03769280B05C}.Release|Win32.ActiveCfg = Release|Win32
 		{9A3063B0-B3DA-4EA3-8A86-03769280B05C}.Release|Win32.Build.0 = Release|Win32
-		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Debug|Win32.Build.0 = Debug|Win32
-		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Release|Win32.ActiveCfg = Release|Win32
-		{7DE8E633-72AC-43EE-B2EC-07720F80497E}.Release|Win32.Build.0 = Release|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Debug|Win32.Build.0 = Debug|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Release|Win32.ActiveCfg = Release|Win32
 		{EF564FEE-87C2-4A01-AE7C-10F052FA461B}.Release|Win32.Build.0 = Release|Win32
+		{7532C0BD-0DD1-4115-92AF-7036BB7B205C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7532C0BD-0DD1-4115-92AF-7036BB7B205C}.Debug|Win32.Build.0 = Debug|Win32
+		{7532C0BD-0DD1-4115-92AF-7036BB7B205C}.Release|Win32.ActiveCfg = Release|Win32
+		{7532C0BD-0DD1-4115-92AF-7036BB7B205C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -87,6 +87,18 @@ private:
 };
 
 
+class MeowSkinDelegate {
+public:
+	MeowSkinDelegate(HINSTANCE hinstance);
+	~MeowSkinDelegate();
+
+	Gdiplus::Image * GetImageByKey(UINT32 * key);
+	Gdiplus::Image * GetImageByName(WCHAR * name);
+private:
+	CString root;
+};
+
+
 // IME UI Window Manager, Handle and Manage the UI Thread.
 // Maybe Will Handle UI Skin in Future
 /*
