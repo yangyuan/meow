@@ -316,7 +316,8 @@ VOID MeowStatusWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTSTRUCT
 	GetClientRect(hwnd, &rect);
 	Gdiplus::Graphics graphics(hdc);
 	SolidBrush brush_white(Color(255, 255, 255, 255));
-	Pen pen_frame(Color(255, 51, 153, 255));
+	// Pen pen_frame(Color(255, 51, 153, 255));
+	Pen pen_frame(Color(255, 56, 121, 217));
 	Pen pen_border(Color(255, 255, 255, 255));
 	//graphics.FillRectangle(&brush_white, 0, 0, rect.right, rect.bottom);
 	graphics.DrawRectangle(&pen_frame, 0, 0, rect.right - 1, rect.bottom - 1);
@@ -337,7 +338,8 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 	Graphics graphics(memDC);
 
 
-	Gdiplus::SolidBrush brush_blue(Color(255, 34, 142, 230));
+	Gdiplus::SolidBrush brush_blue(Color(255, 56, 121, 217));
+	// Gdiplus::SolidBrush brush_blue(Color(255, 34, 142, 230));
 	Gdiplus::SolidBrush brush_red(Color(255, 244, 47, 9));
 	Gdiplus::SolidBrush brush_normal(Color(255, 255, 255, 255)); // 247
 	Gdiplus::SolidBrush brush_hover(Color(255, 204, 223, 255));
@@ -373,24 +375,25 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 	case 1:{
 
 		if (button->state == 0) {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_language.png");
-			graphics.DrawImage(&image, dest, 0, 0, 32, 32, UnitPixel);
+			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\language.png");
+			graphics.DrawImage(&image, dest, 0, 0, 24, 24, UnitPixel);
 		}
 		else {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_language.png");
-			graphics.DrawImage(&image, dest, 32, 0, 32, 32, UnitPixel);
+			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\language.png");
+			graphics.DrawImage(&image, dest, 24, 0, 24, 24, UnitPixel);
 		}
 	}
 		   break;
 	case 2:{
 
 		if (button->state == 0) {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_punctuation.png");
-			graphics.DrawImage(&image, dest, 0, 0, 32, 32, UnitPixel);
+			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\punctuation.png");
+			graphics.DrawImage(&image, dest, 0, 0, 24, 24, UnitPixel);
 		}
 		else {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\mode_punctuation.png");
-			graphics.DrawImage(&image, dest, 32, 0, 32, 32, UnitPixel);
+
+			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\punctuation.png");
+			graphics.DrawImage(&image, dest, 24, 0, 24, 24, UnitPixel);
 		}
 	}
 		   break;
@@ -401,8 +404,8 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 	}
 		   break;
 	default:{
-
-		Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png"); // 
+		Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png"); //
+		graphics.FillRectangle(&brush_blue, 0, 0, rect.right, rect.bottom);
 		graphics.DrawImage(&image, 0, 0, 28, 28); // 4, 4, 24, 24
 
 	}
