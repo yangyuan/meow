@@ -114,6 +114,10 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	flags = dwFlags;
 	Meow::DebugVal(flags);
 
+	ULONG_PTR gdiplustoken;
+	Gdiplus::GdiplusStartupInput gdiplusstartupinput;
+	unsigned int x = Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
+
 	compositionmanager = new MeowCompositionManager(clientid, this);
 
 	if (!_InitThreadMgrEventSink())

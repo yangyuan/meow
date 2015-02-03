@@ -6,11 +6,18 @@
 #include <comdef.h>
 
 #include <atlstr.h>
-#include <strsafe.h>
 
 #include <Commctrl.h>
 #pragma comment(lib,"comctl32.lib")
 
+#include <gdiplus.h>
+#pragma comment(lib,"gdiplus.lib")
+
+#include <map>
+#include <vector>
+
+
+#include <strsafe.h>
 #include "hack.h"
 #include "resource.h"
 

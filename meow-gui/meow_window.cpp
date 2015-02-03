@@ -174,13 +174,13 @@ LRESULT CALLBACK MeowWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		me->impl->WndPaint(hwnd, me, hdc, &ps);
 		EndPaint(hwnd, &ps);
 	}
-	break;
+				   break;
 	case WM_DRAWITEM: {
 		if (me->impl->WndDrawItem(hwnd, me, (DRAWITEMSTRUCT*)lParam)) {
 			return TRUE;
 		}
 	}
-	break;
+					  break;
 	case WM_ERASEBKGND:
 		return TRUE;
 	case WM_LBUTTONDOWN:
@@ -349,7 +349,7 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 	GetClientRect(hwnd, &rect);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(ds->hDC, rect.right, rect.bottom);
 	SelectObject(memDC, memBitmap);
-	
+
 	//Gdiplus::Graphics graphics(ds->hDC);
 	Graphics graphics(memDC);
 
@@ -388,7 +388,7 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 	RectF dest = RectF(2, 2, 24, 24);
 
 	WCHAR buff[MAX_PATH];
-	
+
 	Gdiplus::Image * image;
 	switch (ds->CtlID) {
 	case 1:{
@@ -423,7 +423,7 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 		graphics.DrawImage(image, 0, 0, 28, 28); // 4, 4, 24, 24
 
 	}
-		break;
+			break;
 	}
 	BitBlt(ds->hDC, 0, 0, rect.right, rect.bottom, memDC, 0, 0, SRCCOPY);
 	DeleteDC(memDC);
@@ -474,7 +474,7 @@ VOID MeowCompositionWindow::AdjustPosition(CONST RECT * rect) {
 	//GetCursorPos(&point);
 	//GetCaretPos(&point);
 	point.x = rect->left;
-	point.y = rect->bottom + 4; 
+	point.y = rect->bottom + 4;
 	MeowWindow::WndSetPos(hwnd, &point);
 	//SetWindowPos(hwnd, HWND_TOPMOST, rect.right, rect.bottom + 4, 128, 24, SWP_NOACTIVATE);
 }
@@ -482,7 +482,7 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	using namespace Gdiplus;
 	RECT rect;
 	GetClientRect(hwnd, &rect);
-	Gdiplus::Graphics graphics(hdc); 
+	Gdiplus::Graphics graphics(hdc);
 	Gdiplus::SolidBrush brush_front(Color(255, 34, 142, 230));
 	Gdiplus::SolidBrush brush_front_hl(Color(255, 244, 47, 9));
 	Gdiplus::SolidBrush brush_white(Gdiplus::Color(255, 255, 255, 255));
@@ -495,7 +495,7 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	// Create a Rect object.
 
 	// Initialize arguments.
-	Font font_pinyin(L"Arial", 12, FontStyleBold); 
+	Gdiplus::Font font_pinyin(L"Arial", 12, FontStyleBold);
 	PointF origin(8.0f, 8.0f);
 	graphics.SetTextRenderingHint(TextRenderingHintAntiAlias);
 	// Draw string.
@@ -503,7 +503,7 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 
 	graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit); // TextRenderingHintAntiAlias TextRenderingHintClearTypeGridFit
 
-	Font font_candidate(L"Microsoft Yahei", 12); // Microsoft Yahei , FontStyleBold
+	Gdiplus::Font font_candidate(L"Microsoft Yahei", 12); // Microsoft Yahei , FontStyleBold
 	origin = PointF(8.0f, 40.0f);
 	RectF rectf;
 	Gdiplus::StringFormat format = Gdiplus::StringFormat::GenericTypographic();
@@ -519,10 +519,13 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	for (unsigned int i = 1; i < 10; i++) {
 		if (candidates[i].GetLength() == 0) break;
 		if (i != 1) {
-			wsprintf(stringbuff, L"  %d.%s", i, LPCWSTR(candidates[i]));
+			// wsprintf(stringbuff, L"  %d.%s", i, LPCWSTR(candidates[i]));
+			StringCchPrintf(stringbuff, 256, L"  %d.%s", i, LPCWSTR(candidates[i]));
+
 		}
 		else {
-			wsprintf(stringbuff, L"%d.%s", i, LPCWSTR(candidates[i]));
+			// wsprintf(stringbuff, L"%d.%s", i, LPCWSTR(candidates[i]));
+			StringCchPrintf(stringbuff, 256, L"%d.%s", i, LPCWSTR(candidates[i]));
 		}
 		graphics.MeasureString(stringbuff, wcslen(stringbuff), &font_candidate, origin, &format, &rectf);
 		if (activecandidate == i) {
@@ -535,6 +538,7 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 		origin.X += rectf.Width;
 	}
 	realwidth += 16;
+	if (realwidth < 192) realwidth = 192;
 	wndsize.cx = realwidth;
 	//wndsize.cy = height;
 	SetWindowPos(hwnd, NULL,
@@ -571,7 +575,8 @@ Gdiplus::Image * MeowSkinDelegate::GetImageByKey(UINT32 key) {
 	std::map<MEOW_SKIN_IMAGEKEY, Gdiplus::Image *>::iterator it = images.find((MEOW_SKIN_IMAGEKEY)key);
 	if (it != images.end()) {
 		return it->second;
-	} else {
+	}
+	else {
 		WCHAR buff[MAX_PATH];
 		switch (key) {
 		case MS_IK_LANGUAGE:
@@ -588,14 +593,16 @@ Gdiplus::Image * MeowSkinDelegate::GetImageByKey(UINT32 key) {
 			GetImagePathByName(L"pinyin.png", buff, MAX_PATH);
 			break;
 		}
+
 		Gdiplus::Image *image = new Gdiplus::Image(buff);
 		images.insert(std::map<MEOW_SKIN_IMAGEKEY, Gdiplus::Image *>::value_type((MEOW_SKIN_IMAGEKEY)key, image));
 		return image;
 	}
+
 }
 BOOL MeowSkinDelegate::GetImagePathByName(WCHAR * name, WCHAR * buff, UINT32 length) {
 	CString xx = (name);
 	xx = root + xx;
-	wcscpy(buff, (LPCWSTR)xx);
+	wcscpy_s(buff, length, (LPCWSTR)xx);
 	return TRUE;
 }
