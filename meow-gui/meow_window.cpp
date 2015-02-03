@@ -6,11 +6,11 @@ DWORD WINAPI MeowWindowManager::ThreadProc(LPVOID lpParam)
 {
 	MeowWindowManager * me = (MeowWindowManager *)lpParam;
 	me->impl_status = new MeowStatusWindow();
-	me->window_status = new MeowWindow(me->hinstance, me->impl_status);
+	me->window_status = new MeowWindow(me->hinstance, me->impl_status, me);
 
 
 	me->impl_composition = new MeowCompositionWindow();
-	me->window_composition = new MeowWindow(me->hinstance, me->impl_composition);
+	me->window_composition = new MeowWindow(me->hinstance, me->impl_composition, me);
 	me->window_composition->WndHide();
 
 	MSG msg;
@@ -25,8 +25,9 @@ DWORD WINAPI MeowWindowManager::ThreadProc(LPVOID lpParam)
 MeowWindowManager::MeowWindowManager(HINSTANCE _hinstance)  {
 	hinstance = _hinstance;
 	impl_status = NULL;
+	impl_composition = NULL;
 	window_status = NULL;
-	new MeowSkinDelegate(hinstance);
+	skin = new MeowSkinDelegate(hinstance);
 	HANDLE uithread = CreateThread(NULL, 0, MeowWindowManager::ThreadProc, this, 0, NULL);
 };
 
@@ -54,11 +55,26 @@ VOID MeowWindowManager::AdjustCompositionWindow(CONST RECT * rect, CONST TCHAR *
 }
 
 
+VOID MeowWindowManager::SetCandidate(UINT8 index, CONST TCHAR * _text) {
+	impl_composition->SetCandidate(index, _text);
+}
+
+VOID MeowWindowManager::ClearCandidates() {
+	impl_composition->ClearCandidates();
+}
+
+VOID MeowWindowManager::SetActiveCandidate(UINT8 index) {
+	impl_composition->SetActiveCandidate(index);
+}
+
+
+
 // MeowWindow
-MeowWindow::MeowWindow(HINSTANCE _hinstance, MeowWindowImpl * _impl)
+MeowWindow::MeowWindow(HINSTANCE _hinstance, MeowWindowImpl * _impl, MeowWindowManager * _manager)
 {
 	hinstance = _hinstance;
 	impl = _impl;
+	manager = _manager;
 
 	WNDCLASSEX wcex;
 	TCHAR * tc = impl->GetWndClass();
@@ -371,50 +387,44 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 
 	RectF dest = RectF(2, 2, 24, 24);
 
+	WCHAR buff[MAX_PATH];
+	
+	Gdiplus::Image * image;
 	switch (ds->CtlID) {
 	case 1:{
-
+		image = me->manager->skin->GetImageByKey(MS_IK_LANGUAGE);
 		if (button->state == 0) {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\language.png");
-			graphics.DrawImage(&image, dest, 0, 0, 24, 24, UnitPixel);
+			graphics.DrawImage(image, dest, 0, 0, 24, 24, UnitPixel);
 		}
 		else {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\language.png");
-			graphics.DrawImage(&image, dest, 24, 0, 24, 24, UnitPixel);
+			graphics.DrawImage(image, dest, 24, 0, 24, 24, UnitPixel);
 		}
 	}
 		   break;
 	case 2:{
-
+		image = me->manager->skin->GetImageByKey(MS_IK_PUNCTUATION);
 		if (button->state == 0) {
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\punctuation.png");
-			graphics.DrawImage(&image, dest, 0, 0, 24, 24, UnitPixel);
+			graphics.DrawImage(image, dest, 0, 0, 24, 24, UnitPixel);
 		}
 		else {
-
-			Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\punctuation.png");
-			graphics.DrawImage(&image, dest, 24, 0, 24, 24, UnitPixel);
+			graphics.DrawImage(image, dest, 24, 0, 24, 24, UnitPixel);
 		}
 	}
 		   break;
 	case 3:{
-		Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\configure.png");
-		graphics.DrawImage(&image, 2, 2, 24, 24);
+		image = me->manager->skin->GetImageByKey(MS_IK_CONFIGURE);
+		graphics.DrawImage(image, 2, 2, 24, 24);
 
 	}
 		   break;
 	default:{
-		Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png"); //
+		image = me->manager->skin->GetImageByKey(MS_IK_PINYIN);
 		graphics.FillRectangle(&brush_blue, 0, 0, rect.right, rect.bottom);
-		graphics.DrawImage(&image, 0, 0, 28, 28); // 4, 4, 24, 24
+		graphics.DrawImage(image, 0, 0, 28, 28); // 4, 4, 24, 24
 
 	}
 		break;
 	}
-
-
-	
-	
 	BitBlt(ds->hDC, 0, 0, rect.right, rect.bottom, memDC, 0, 0, SRCCOPY);
 	DeleteDC(memDC);
 	DeleteObject(memBitmap);
@@ -428,7 +438,6 @@ TCHAR * MeowCompositionWindow::GetWndClass() {
 
 VOID MeowCompositionWindow::WndInit(HWND _hwnd, MeowWindow * me) {
 	hwnd = _hwnd;
-	hwnd_edit = NULL;
 
 	POINT point;
 	GetCursorPos(&point);
@@ -439,21 +448,24 @@ VOID MeowCompositionWindow::WndInit(HWND _hwnd, MeowWindow * me) {
 	SetWindowPos(hwnd, HWND_TOPMOST,
 		point.x, point.y, wndsize.cx, wndsize.cy,
 		SWP_NOACTIVATE);
-
-	//hwnd_edit = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", L"", WS_VISIBLE | WS_CHILD | ES_READONLY, 0, 0, 128, 24, hwnd, (HMENU)0, NULL, NULL);
-	hwnd_edit = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", L"", WS_VISIBLE | WS_CHILD | ES_READONLY, 0, 0, 0, 0, hwnd, (HMENU)0, NULL, NULL);
-	//SendMessage(button4, BM_SETIMAGE, IMAGE_ICON, (LPARAM)LoadImage(me->hinstance, MAKEINTRESOURCE(IDI_ICON_MAIN), IMAGE_ICON, 32, 32, NULL));
-	SetWindowSubclass(hwnd_edit, MeowWindow::ChildProc, 0, (DWORD_PTR)me);
-	HFONT hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-	SendMessage(hwnd_edit, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(FALSE, 0));
-	SetWindowText(hwnd_edit, _T("‸"));
 }
 
 
 VOID MeowCompositionWindow::SetText(CONST TCHAR * w) {
-	if (hwnd_edit != NULL) {
-		SetWindowText(hwnd_edit, w);
-	}
+	candidates[0].SetString(w);
+}
+
+VOID MeowCompositionWindow::SetCandidate(UINT8 index, CONST TCHAR * _text) {
+	candidates[index].SetString(_text);
+}
+
+VOID MeowCompositionWindow::ClearCandidates() {
+	candidates[0].SetString(_T(""));
+}
+
+
+VOID MeowCompositionWindow::SetActiveCandidate(UINT8 index) {
+	activecandidate = index;
 }
 
 
@@ -482,61 +494,54 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	graphics.DrawLine(&pen2, 0, 32, rect.right, 32);
 	// Create a Rect object.
 
-
-	WCHAR string[] = L"pin'yin'shu'ru'fa"; 
-
 	// Initialize arguments.
 	Font font_pinyin(L"Arial", 12, FontStyleBold); 
 	PointF origin(8.0f, 8.0f);
 	graphics.SetTextRenderingHint(TextRenderingHintAntiAlias);
 	// Draw string.
-	graphics.DrawString(string, 17, &font_pinyin, origin, &brush_front);
-
+	graphics.DrawString(candidates[0], candidates[0].GetLength(), &font_pinyin, origin, &brush_front);
 
 	graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit); // TextRenderingHintAntiAlias TextRenderingHintClearTypeGridFit
 
 	Font font_candidate(L"Microsoft Yahei", 12); // Microsoft Yahei , FontStyleBold
 	origin = PointF(8.0f, 40.0f);
-	WCHAR string2[] = L"1.拼音输入法";
-	WCHAR string3[] = L"  2.拼音  3.测试  4.字符串  5.跟真的一样";
-	WCHAR string4[] = L"1.拼音输入法  2.拼音  3.猫の输入法  4.我是候选  5.我也是";
 	RectF rectf;
 	Gdiplus::StringFormat format = Gdiplus::StringFormat::GenericTypographic();
 
-	unsigned int width = 0;
-	graphics.MeasureString(string2, wcslen(string2), &font_candidate, origin, &format, &rectf);
-	origin.Y -= (rectf.Height - 18);
-	graphics.DrawString(string2, wcslen(string2), &font_candidate, origin, &format, &brush_front_hl);
-	//graphics.DrawString(string4, wcslen(string4), &font_candidate, origin, &format, &brush_front_hl);
-	width += rectf.Width;
-	origin.X += rectf.Width;
-	graphics.MeasureString(string3, wcslen(string3), &font_candidate, origin, &format, &rectf);
-	width += rectf.Width;
-	graphics.DrawString(string3, wcslen(string3), &font_candidate, origin, &format, &brush_front);
+	REAL realwidth = 0;
 
-	unsigned int height = rectf.Height - 20 + 64;
-	width += 16;
-	wndsize.cx = width;
+	WCHAR string_sample[] = L"猫の输入法";
+	graphics.MeasureString(string_sample, wcslen(string_sample), &font_candidate, origin, &format, &rectf);
+	origin.Y -= (rectf.Height - 18);
+	//graphics.DrawString(string_sample, wcslen(string_sample), &font_candidate, origin, &format, &brush_front_hl);
+
+	WCHAR stringbuff[256] = L"";
+	for (unsigned int i = 1; i < 10; i++) {
+		if (candidates[i].GetLength() == 0) break;
+		if (i != 1) {
+			wsprintf(stringbuff, L"  %d.%s", i, LPCWSTR(candidates[i]));
+		}
+		else {
+			wsprintf(stringbuff, L"%d.%s", i, LPCWSTR(candidates[i]));
+		}
+		graphics.MeasureString(stringbuff, wcslen(stringbuff), &font_candidate, origin, &format, &rectf);
+		if (activecandidate == i) {
+			graphics.DrawString(stringbuff, wcslen(stringbuff), &font_candidate, origin, &format, &brush_front_hl);
+		}
+		else {
+			graphics.DrawString(stringbuff, wcslen(stringbuff), &font_candidate, origin, &format, &brush_front);
+		}
+		realwidth += rectf.Width;
+		origin.X += rectf.Width;
+	}
+	realwidth += 16;
+	wndsize.cx = realwidth;
 	//wndsize.cy = height;
 	SetWindowPos(hwnd, NULL,
 		0, 0, wndsize.cx, wndsize.cy,
 		SWP_NOMOVE);
 	return;
-	/*
-	// double buff
-	RECT wndRect;
-	::GetWindowRect(hwnd, &wndRect);
-	SIZE wndSize = { wndRect.right - wndRect.left, wndRect.bottom - wndRect.top };
-	HDC memDC = ::CreateCompatibleDC(hdc);
-	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, wndSize.cx, wndSize.cy);
-	::SelectObject(hdc, memBitmap);
-	Gdiplus::Graphics graphics(memDC);
-	graphics.DrawImage(&image, 0, 0, wndSize.cx, wndSize.cy);
 
-	//SetLayeredWindowAttributes(hwndmain, RGB(255, 0, 0), 0, LWA_COLORKEY);
-	::DeleteDC(memDC);
-	::DeleteObject(memBitmap);
-	*/
 }
 
 
@@ -555,15 +560,42 @@ MeowSkinDelegate::MeowSkinDelegate(HINSTANCE hinstance) {
 	root.Append(L"\\skin\\default\\");
 }
 MeowSkinDelegate::~MeowSkinDelegate() {
-
+	std::map<MEOW_SKIN_IMAGEKEY, Gdiplus::Image *>::iterator it;
+	for (it = images.begin(); it != images.end(); ++it) {
+		delete it->second;
+	}
 }
 
 
-Gdiplus::Image * MeowSkinDelegate::GetImageByKey(UINT32 * key) {
-	Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png");
-	return &image;
+Gdiplus::Image * MeowSkinDelegate::GetImageByKey(UINT32 key) {
+	std::map<MEOW_SKIN_IMAGEKEY, Gdiplus::Image *>::iterator it = images.find((MEOW_SKIN_IMAGEKEY)key);
+	if (it != images.end()) {
+		return it->second;
+	} else {
+		WCHAR buff[MAX_PATH];
+		switch (key) {
+		case MS_IK_LANGUAGE:
+			GetImagePathByName(L"language.png", buff, MAX_PATH);
+			break;
+		case MS_IK_PUNCTUATION:
+			GetImagePathByName(L"punctuation.png", buff, MAX_PATH);
+			break;
+		case MS_IK_CONFIGURE:
+			GetImagePathByName(L"configure.png", buff, MAX_PATH);
+			break;
+		default:
+		case MS_IK_PINYIN:
+			GetImagePathByName(L"pinyin.png", buff, MAX_PATH);
+			break;
+		}
+		Gdiplus::Image *image = new Gdiplus::Image(buff);
+		images.insert(std::map<MEOW_SKIN_IMAGEKEY, Gdiplus::Image *>::value_type((MEOW_SKIN_IMAGEKEY)key, image));
+		return image;
+	}
 }
-Gdiplus::Image * MeowSkinDelegate::GetImageByName(WCHAR * name) {
-	Gdiplus::Image image(L"X:\\Workspaces\\git\\meow\\Runtime\\skin\\default\\pinyin.png");
-	return &image;
+BOOL MeowSkinDelegate::GetImagePathByName(WCHAR * name, WCHAR * buff, UINT32 length) {
+	CString xx = (name);
+	xx = root + xx;
+	wcscpy(buff, (LPCWSTR)xx);
+	return TRUE;
 }

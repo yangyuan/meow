@@ -1,15 +1,13 @@
 #pragma once
 
-
-
-
 class MeowWindowImpl;
+class MeowWindowManager;
 // General Purpose IME UI Window
 // It should be copied, not inheried
 class MeowWindow
 {
 public:
-	MeowWindow(HINSTANCE hinstance, MeowWindowImpl *);
+	MeowWindow(HINSTANCE hinstance, MeowWindowImpl *, MeowWindowManager *);
 	~MeowWindow();
 
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -24,6 +22,7 @@ public:
 	HINSTANCE hinstance;
 	HWND hwnd;
 	MeowWindowImpl * impl;
+	MeowWindowManager * manager;
 private:
 	POINT pointcapture;
 	POINT pointcaptureclient;
@@ -76,26 +75,38 @@ public:
 	TCHAR * GetWndClass();
 	VOID WndInit(HWND hwnd, MeowWindow * me);
 	VOID SetText(CONST TCHAR *);
+	VOID SetCandidate(UINT8 index, CONST TCHAR *);
+	VOID ClearCandidates();
+	VOID SetActiveCandidate(UINT8 index);
 	VOID AdjustPosition(CONST RECT *);
 	VOID WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTSTRUCT * ps);
 	BOOL WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT *) { return FALSE; };
 private:
 	TCHAR * wndclass = _T("MEOW_COMPOSITION");
 	HWND hwnd;
-	HWND hwnd_edit;
 	SIZE wndsize;
+
+	UINT8 activecandidate;
+	CString candidates[10];
 };
 
+typedef enum {
+	MS_IK_PINYIN,
+	MS_IK_LANGUAGE,
+	MS_IK_PUNCTUATION,
+	MS_IK_CONFIGURE,
+} MEOW_SKIN_IMAGEKEY;
 
 class MeowSkinDelegate {
 public:
 	MeowSkinDelegate(HINSTANCE hinstance);
 	~MeowSkinDelegate();
 
-	Gdiplus::Image * GetImageByKey(UINT32 * key);
-	Gdiplus::Image * GetImageByName(WCHAR * name);
+	Gdiplus::Image * GetImageByKey(UINT32 key);
+	BOOL GetImagePathByName(WCHAR * name, WCHAR * buff, UINT32 length);
 private:
 	CString root;
+	std::map<MEOW_SKIN_IMAGEKEY, Gdiplus::Image *> images;
 };
 
 
@@ -114,11 +125,16 @@ public:
 	HINSTANCE hinstance;
 	HANDLE uithread;
 
+	MeowSkinDelegate * skin;
+
 	MeowStatusWindow * impl_status;
 	MeowWindow * window_status;
 	VOID ShowStatusWindow();
 	VOID HideStatusWindow();
 	VOID AdjustCompositionWindow(CONST RECT * rect, CONST TCHAR * text);
+	VOID SetCandidate(UINT8 index, CONST TCHAR *);
+	VOID SetActiveCandidate(UINT8 index);
+	VOID ClearCandidates();
 
 	MeowCompositionWindow * impl_composition;
 	MeowWindow * window_composition;

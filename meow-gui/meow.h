@@ -15,6 +15,7 @@
 
 #include "resource.h"
 #include <vector>
+#include <map>
 
 #include <atlstr.h>
 #include <strsafe.h>

@@ -84,7 +84,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			GetWindowRect(hWnd, &rect);
 			rect.left += 16;
 			rect.bottom = rect.top + 72;
-			mwm->AdjustCompositionWindow(&rect, _T("shurufa"));
+			mwm->ClearCandidates();
+			mwm->AdjustCompositionWindow(&rect, _T("pin'yin'shu'ru'fa"));
+			mwm->SetCandidate(1, L"拼音输入法");
+			mwm->SetCandidate(2, L"拼音");
+			mwm->SetCandidate(3, L"猫の输入法");
+			mwm->SetCandidate(4, L"我是候选");
+			mwm->SetCandidate(5, L"我也是");
+			mwm->SetActiveCandidate(2);
 		}
 			break;
 		default:
