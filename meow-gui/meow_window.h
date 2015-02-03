@@ -78,6 +78,7 @@ public:
 	VOID SetCandidate(UINT8 index, CONST TCHAR *);
 	VOID ClearCandidates();
 	VOID SetActiveCandidate(UINT8 index);
+	VOID RefreshCandidate();
 	VOID AdjustPosition(CONST RECT *);
 	VOID WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTSTRUCT * ps);
 	BOOL WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT *) { return FALSE; };
@@ -135,6 +136,7 @@ public:
 	VOID SetCandidate(UINT8 index, CONST TCHAR *);
 	VOID SetActiveCandidate(UINT8 index);
 	VOID ClearCandidates();
+	VOID RefreshCandidate();
 
 	MeowCompositionWindow * impl_composition;
 	MeowWindow * window_composition;

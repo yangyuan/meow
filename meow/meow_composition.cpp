@@ -277,6 +277,7 @@ VOID MeowCompositionManager::DoCompositionSync(TfEditCookie ec) {
 		
 		if (range->SetText(ec, 0, (PCTSTR)buffer, buffer.GetLength()) == S_OK) {
 			textservice->windowmanager->AdjustCompositionWindow(NULL, (PCTSTR)buffer);
+			textservice->windowmanager->RefreshCandidate();
 		}
 		
 		ITfProperty* property = NULL;
@@ -301,6 +302,7 @@ VOID MeowCompositionManager::DoCompositionSyncWind(TfEditCookie ec) {
 	{
 		if (range->SetText(ec, 0, (PCTSTR)buffer, 0) == S_OK) {
 			textservice->windowmanager->AdjustCompositionWindow(NULL, (PCTSTR)buffer);
+			textservice->windowmanager->RefreshCandidate();
 		}
 		range->Release();
 	}
@@ -312,6 +314,7 @@ VOID MeowCompositionManager::DoCompositionSyncText(TfEditCookie ec) {
 	{
 		if (range->SetText(ec, 0, (PCTSTR)buffer, buffer.GetLength()) == S_OK) {
 			textservice->windowmanager->AdjustCompositionWindow(NULL, (PCTSTR)buffer);
+			textservice->windowmanager->RefreshCandidate();
 		}
 		range->Release();
 	}

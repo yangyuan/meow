@@ -67,7 +67,9 @@ VOID MeowWindowManager::SetActiveCandidate(UINT8 index) {
 	impl_composition->SetActiveCandidate(index);
 }
 
-
+VOID MeowWindowManager::RefreshCandidate() {
+	impl_composition->RefreshCandidate();
+}
 
 // MeowWindow
 MeowWindow::MeowWindow(HINSTANCE _hinstance, MeowWindowImpl * _impl, MeowWindowManager * _manager)
@@ -93,7 +95,7 @@ MeowWindow::MeowWindow(HINSTANCE _hinstance, MeowWindowImpl * _impl, MeowWindowM
 	}
 
 	hwnd = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TOPMOST, impl->GetWndClass(), TEXT(""),
-		WS_CLIPCHILDREN | WS_POPUP,
+		WS_POPUP,
 		0, 0, 0, 0,
 		NULL, 0, hinstance, this);
 	ShowWindow(hwnd, SW_SHOWNOACTIVATE);
@@ -318,7 +320,7 @@ VOID MeowStatusWindow::WndInit(HWND hwnd, MeowWindow * me) {
 	buttons.push_back(mwfb);
 	unsigned int count = buttons.size();
 	unsigned int size = 28;
-	SetWindowPos(hwnd, NULL, 0, 0, size * count + 2, size + 2, SWP_NOMOVE);
+	SetWindowPos(hwnd, NULL, 0, 0, size * count + 2, size + 2, SWP_NOMOVE | SWP_NOACTIVATE);
 
 	for (unsigned int i = 0; i < count; i++) {
 		buttons[i].hwnd = CreateWindow(L"BUTTON", mwfb.tooltip, WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, size*i + 1, 1, size, size, hwnd, buttons[i].memu, NULL, NULL);
@@ -349,8 +351,6 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 	GetClientRect(hwnd, &rect);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(ds->hDC, rect.right, rect.bottom);
 	SelectObject(memDC, memBitmap);
-
-	//Gdiplus::Graphics graphics(ds->hDC);
 	Graphics graphics(memDC);
 
 
@@ -468,21 +468,31 @@ VOID MeowCompositionWindow::SetActiveCandidate(UINT8 index) {
 	activecandidate = index;
 }
 
+VOID MeowCompositionWindow::RefreshCandidate() {
+	InvalidateRect(hwnd, NULL, NULL);
+}
+
 
 VOID MeowCompositionWindow::AdjustPosition(CONST RECT * rect) {
 	POINT point;
-	//GetCursorPos(&point);
-	//GetCaretPos(&point);
 	point.x = rect->left;
 	point.y = rect->bottom + 4;
 	MeowWindow::WndSetPos(hwnd, &point);
-	//SetWindowPos(hwnd, HWND_TOPMOST, rect.right, rect.bottom + 4, 128, 24, SWP_NOACTIVATE);
 }
 VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTSTRUCT * ps) {
 	using namespace Gdiplus;
 	RECT rect;
 	GetClientRect(hwnd, &rect);
-	Gdiplus::Graphics graphics(hdc);
+	
+	// Gdiplus::Graphics graphics(hdc);
+	HDC memhdc = CreateCompatibleDC(hdc);
+	HBITMAP membitmap = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
+	SelectObject(memhdc, membitmap);
+	Graphics graphics(memhdc);
+
+
+
+
 	Gdiplus::SolidBrush brush_front(Color(255, 34, 142, 230));
 	Gdiplus::SolidBrush brush_front_hl(Color(255, 244, 47, 9));
 	Gdiplus::SolidBrush brush_white(Gdiplus::Color(255, 255, 255, 255));
@@ -508,6 +518,7 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	RectF rectf;
 	Gdiplus::StringFormat format = Gdiplus::StringFormat::GenericTypographic();
 
+	unsigned int width = 0;
 	REAL realwidth = 0;
 
 	WCHAR string_sample[] = L"猫の输入法";
@@ -539,11 +550,18 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	}
 	realwidth += 16;
 	if (realwidth < 192) realwidth = 192;
-	wndsize.cx = realwidth;
-	//wndsize.cy = height;
-	SetWindowPos(hwnd, NULL,
-		0, 0, wndsize.cx, wndsize.cy,
-		SWP_NOMOVE);
+	width = realwidth;
+	if (rect.right != width) {
+		wndsize.cx = width;
+		//wndsize.cy = height;
+		SetWindowPos(hwnd, NULL,
+			0, 0, wndsize.cx, wndsize.cy,
+			SWP_NOMOVE | SWP_NOACTIVATE);
+	}
+	
+	BitBlt(hdc, 0, 0, rect.right, rect.bottom, memhdc, 0, 0, SRCCOPY);
+	DeleteDC(memhdc);
+	DeleteObject(membitmap);
 	return;
 
 }

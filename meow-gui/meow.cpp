@@ -91,9 +91,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			mwm->SetCandidate(3, L"猫の输入法");
 			mwm->SetCandidate(4, L"我是候选");
 			mwm->SetCandidate(5, L"我也是");
-			mwm->SetActiveCandidate(2);
+			mwm->SetActiveCandidate(1);
+			mwm->RefreshCandidate();
 		}
-			break;
+		break;
+		case ID_DEBUG_APPLENDCOMPOSITIONTEXT:
+		{
+			mwm->AdjustCompositionWindow(NULL, _T("pin'yin'shu'ru"));
+			mwm->SetActiveCandidate(0);
+			mwm->RefreshCandidate();
+		}
+		break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
