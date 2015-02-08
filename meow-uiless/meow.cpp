@@ -1,7 +1,6 @@
 #include "meow.h"
-#include "meow_window.h"
 
-const TCHAR * MEOWUI_TITLE = _T("Meow GUI Debugger");
+const TCHAR * MEOWUI_TITLE = _T("Meow UIless Debugger");
 const TCHAR * MEOWUI_WINDOWCLASS_MAIN = _T("MEOW_MAIN");
 
 HINSTANCE hinstance;
@@ -56,7 +55,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	return (int)msg.wParam;
 }
 
-MeowWindowManager * mwm;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
@@ -66,44 +64,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
-		mwm = new MeowWindowManager(hinstance);
 	case WM_COMMAND:
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
 		switch (wmId)
 		{
-		case ID_DEBUG_SHOWSTATUSWINDOW:
-			mwm->ShowStatusWindow();
-			break;
-		case ID_DEBUG_HIDESTATUSWINDOW:
-			mwm->HideStatusWindow();
-			break;
-		case ID_DEBUG_SETCOMPOSITIONTEXT:
-		{
-			RECT rect;
-			GetWindowRect(hWnd, &rect);
-			rect.left += 16;
-			rect.bottom = rect.top + 72;
-			mwm->ClearCandidates();
-			mwm->AdjustCompositionWindow(&rect, _T("pin'yin'shu'ru'fa"));
-			mwm->SetCandidate(1, L"拼音输入法");
-			mwm->SetCandidate(2, L"拼音");
-			mwm->SetCandidate(3, L"猫の输入法");
-			mwm->SetCandidate(4, L"我是候选");
-			mwm->SetCandidate(5, L"我也是");
-			mwm->SetActiveCandidate(1);
-			mwm->RefreshCandidate();
-		}
-		break;
-		case ID_DEBUG_APPLENDCOMPOSITIONTEXT:
-		{
-			mwm->AdjustCompositionWindow(NULL, _T("pin'yin'shu'ru"));
-			mwm->SetActiveCandidate(0);
-			mwm->RefreshCandidate();
-		}
-		break;
 		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			break;
 		}
 		break;
 	case WM_PAINT:
@@ -118,36 +85,3 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
-/*
-
-
-
-
-
-
-
-// WS_EX_LAYERED
-RECT wndRect;
-::GetWindowRect(hwndmain, &wndRect);
-SIZE wndSize = { wndRect.right - wndRect.left, wndRect.bottom - wndRect.top };
-HDC hdc = ::GetDC(hwndmain);
-HDC memDC = ::CreateCompatibleDC(hdc);
-HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, wndSize.cx, wndSize.cy);
-::SelectObject(memDC, memBitmap);
-Gdiplus::Image image(L"C:\\pic.png");
-Gdiplus::Graphics graphics(memDC);
-graphics.DrawImage(&image, 0, 0, wndSize.cx, wndSize.cy);
-
-HDC screenDC = GetDC(NULL);
-POINT ptSrc = { 0, 0 };
-BLENDFUNCTION blendFunction;
-blendFunction.AlphaFormat = AC_SRC_ALPHA;
-blendFunction.BlendFlags = 0;
-blendFunction.BlendOp = AC_SRC_OVER;
-blendFunction.SourceConstantAlpha = 255;
-UpdateLayeredWindow(hwndmain, screenDC, &ptSrc, &wndSize, memDC, &ptSrc, 0, &blendFunction, 2);
-//SetLayeredWindowAttributes(hwndmain, RGB(255, 0, 0), 0, LWA_COLORKEY);
-::DeleteDC(memDC);
-::DeleteObject(memBitmap);
-
-*/
