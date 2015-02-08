@@ -1,4 +1,5 @@
 #include "meow.h"
+#include "meow_textapp.h"
 
 const TCHAR * MEOWUI_TITLE = _T("Meow UIless Debugger");
 const TCHAR * MEOWUI_WINDOWCLASS_MAIN = _T("MEOW_MAIN");
@@ -35,7 +36,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	hwndmain = CreateWindowEx(NULL,
 		MEOWUI_WINDOWCLASS_MAIN, MEOWUI_TITLE,
 		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, 400, 300,
+		CW_USEDEFAULT, 0, 400, 360,
 		NULL, NULL, hInstance, NULL);
 
 	if (!hwndmain)
@@ -55,6 +56,35 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	return (int)msg.wParam;
 }
 
+MeowTextApp * app;
+
+VOID WndPaint(HWND hwnd, HDC hdc, PAINTSTRUCT * ps) {
+	using namespace Gdiplus;
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	Gdiplus::Graphics graphics(hdc);
+	SolidBrush brush_white(Color(255, 255, 255, 255));
+
+	graphics.FillRectangle(&brush_white, 0, 0, rect.right, rect.bottom);
+
+	Gdiplus::Font font_candidate(L"Microsoft Yahei", 12); // Microsoft Yahei , FontStyleBold
+	PointF origin(8.0f, 8.0f);
+	RectF rectf;
+	Gdiplus::StringFormat format = Gdiplus::StringFormat::GenericTypographic();
+
+	unsigned int width = 0;
+	REAL realwidth = 0;
+	Gdiplus::SolidBrush brush_front(Color(255, 34, 142, 230));
+	WCHAR string_sample[] = L"Ã¨¤ÎÊäÈë·¨";
+	graphics.DrawString(string_sample, wcslen(string_sample), &font_candidate, origin, &format, &brush_front);
+
+	unsigned int x = app->candidatelist.size();
+ 	for (unsigned int i = 0; i < x; i++) {
+		origin.Y += 24;
+		graphics.DrawString(app->candidatelist[i].c_str(), wcslen(app->candidatelist[i].c_str()), &font_candidate, origin, &format, &brush_front);
+	}
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
@@ -64,6 +94,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
+		app = new MeowTextApp(hWnd);
+		break;
 	case WM_COMMAND:
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
@@ -75,6 +107,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
+		WndPaint(hWnd, hdc, &ps);
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:

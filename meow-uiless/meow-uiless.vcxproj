@@ -77,9 +77,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="meow.cpp" />
+    <ClCompile Include="meow_textapp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="meow.h" />
+    <ClInclude Include="meow_textapp.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
