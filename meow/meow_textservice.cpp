@@ -138,8 +138,7 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	if ((hr == S_OK) &&
 		(pDocMgrFocus != NULL))
 	{
-		Meow::DebugLog("GOING _InitTextEditSink");
-		_InitTextEditSink(pDocMgrFocus);
+		SyncDocumentMgr(pDocMgrFocus);
 		pDocMgrFocus->Release();
 	}
 	BOOL foc;
@@ -274,20 +273,16 @@ STDAPI MeowTextService::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr 
 
 	compositionmanager->Switch(pDocMgrFocus, pDocMgrPrevFocus);
 
-	Meow::DebugLog("CTextService::OnSetFocus ITfDocumentMgr");
-	Meow::DebugLog("GOING _InitTextEditSink");
-	_InitTextEditSink(pDocMgrFocus);
+	SyncDocumentMgr(pDocMgrFocus);
 	return S_OK;
 }
 
 STDAPI MeowTextService::OnPushContext(ITfContext *pContext)
 {
-	Meow::DebugLog("OnPushContext");
 	return S_OK;
 }
 STDAPI MeowTextService::OnPopContext(ITfContext *pContext)
 {
-	Meow::DebugLog("OnPopContext");
 	return S_OK;
 }
 
@@ -342,34 +337,24 @@ STDAPI MeowTextService::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly,
 	return S_OK;
 }
 
-//+---------------------------------------------------------------------------
-//
-// _InitTextEditSink
-//
-// Init a text edit sink on the topmost context of the document.
-// Always release any previous sink.
-//----------------------------------------------------------------------------
 
-BOOL MeowTextService::_InitTextEditSink(ITfDocumentMgr *pDocMgr)
+BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
+
+	uilessmanager->SetDocumentMgr(pDocMgr);
 	ITfSource *pSource;
 	BOOL fRet;
 
 	// clear out any previous sink first
 
-	Meow::DebugLog("_InitTextEditSink 1");
 	if (_dwTextEditSinkCookie != TF_INVALID_COOKIE)
 	{
-		Meow::DebugLog("_InitTextEditSink 2");
 		if (_pTextEditSinkContext->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK)
 		{
 
-			Meow::DebugLog("_InitTextEditSink 3");
 			pSource->UnadviseSink(_dwTextEditSinkCookie);
 			pSource->Release();
 		}
-
-		Meow::DebugLog("_InitTextEditSink 4");
 		_pTextEditSinkContext->Release();
 		_pTextEditSinkContext = NULL;
 		_dwTextEditSinkCookie = TF_INVALID_COOKIE;
@@ -377,8 +362,6 @@ BOOL MeowTextService::_InitTextEditSink(ITfDocumentMgr *pDocMgr)
 
 	if (pDocMgr == NULL)
 	{
-
-		Meow::DebugLog("_InitTextEditSink 5");
 		return TRUE; // caller just wanted to clear the previous sink
 	}
 
@@ -386,13 +369,11 @@ BOOL MeowTextService::_InitTextEditSink(ITfDocumentMgr *pDocMgr)
 
 	if (pDocMgr->GetTop(&_pTextEditSinkContext) != S_OK) {
 
-		Meow::DebugLog("_InitTextEditSink 6");
 		return FALSE;
 	}
 
 	if (_pTextEditSinkContext == NULL) {
 
-		Meow::DebugLog("_InitTextEditSink 7");
 		return TRUE; // empty document, no sink possible
 	}
 
@@ -400,29 +381,23 @@ BOOL MeowTextService::_InitTextEditSink(ITfDocumentMgr *pDocMgr)
 
 	if (_pTextEditSinkContext->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK)
 	{
-		Meow::DebugLog("_InitTextEditSink 8");
 		if (pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *)this, &_dwTextEditSinkCookie) == S_OK)
 		{
-			Meow::DebugLog("_InitTextEditSink 9");
 			fRet = TRUE;
 		}
 		else
 		{
-			Meow::DebugLog("_InitTextEditSink 10");
 			_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 		}
 		pSource->Release();
 	}
 
-	Meow::DebugLog("_InitTextEditSink 11");
 	if (fRet == FALSE)
 	{
-		Meow::DebugLog("_InitTextEditSink 12");
 		_pTextEditSinkContext->Release();
 		_pTextEditSinkContext = NULL;
 	}
 
-	Meow::DebugLog("_InitTextEditSink 13");
 	return fRet;
 }
 
@@ -432,24 +407,20 @@ BOOL MeowTextService::_InitTextEditSink(ITfDocumentMgr *pDocMgr)
 
 STDAPI MeowTextService::OnSetFocus(BOOL fForeground)
 {
-	Meow::DebugLog("MeowTextService::OnSetFocus fForeground");
 	// may need to store and resume composition here
 
 	ITfDocumentMgr *pDocMgrFocus;
 	if ((threadmgr->GetFocus(&pDocMgrFocus) == S_OK) &&
 		(pDocMgrFocus != NULL))
 	{
-		Meow::DebugLog("GOING _InitTextEditSink");
-		_InitTextEditSink(pDocMgrFocus);
+		SyncDocumentMgr(pDocMgrFocus);
 		pDocMgrFocus->Release();
 	}
-	Meow::DebugLog("MeowTextService::OnSetFocus FINISH");
 	return S_OK;
 }
 
 STDAPI MeowTextService::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	Meow::DebugLog("MeowTextService::OnTestKeyDown");
 	*pfEaten = compositionmanager->OnTestKeyDown(pContext, wParam);
 	return S_OK;
 }

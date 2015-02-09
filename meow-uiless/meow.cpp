@@ -99,11 +99,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
-		switch (wmId)
+		/*switch (wmId)
 		{
 		default:
 			break;
-		}
+		}*/
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);

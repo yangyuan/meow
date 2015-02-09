@@ -387,8 +387,6 @@ BOOL MeowStatusWindow::WndDrawItem(HWND hwnd, MeowWindow * me, DRAWITEMSTRUCT * 
 
 	RectF dest = RectF(2, 2, 24, 24);
 
-	WCHAR buff[MAX_PATH];
-
 	Gdiplus::Image * image;
 	switch (ds->CtlID) {
 	case 1:{
@@ -550,7 +548,7 @@ VOID MeowCompositionWindow::WndPaint(HWND hwnd, MeowWindow * me, HDC hdc, PAINTS
 	}
 	realwidth += 16;
 	if (realwidth < 192) realwidth = 192;
-	width = realwidth;
+	width = (unsigned int) realwidth;
 	if (rect.right != width) {
 		wndsize.cx = width;
 		//wndsize.cy = height;

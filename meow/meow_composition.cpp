@@ -98,7 +98,6 @@ BOOL MeowCompositionManager::OnKeyDown(ITfContext * context, WPARAM vkey){
 	BOOL ret = ProcessKeyStroke(context, vkey, &eaten);
 	if (!ret) {
 		Sleep(128);
-		Meow::DebugError("OnKeyDown Wait");
 		ret = ProcessKeyStroke(context, vkey, &eaten);
 	}
 	textservice->uilessmanager->Show();

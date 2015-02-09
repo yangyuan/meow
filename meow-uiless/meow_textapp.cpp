@@ -106,9 +106,26 @@ HRESULT MeowTextApp::UpdateUIElement(DWORD dwUIElementId)
 			candidatelist.clear();
 
 			UINT count;
-			if (SUCCEEDED(candidatelistuielement->GetCount(&count)))
+			candidatelistuielement->GetCount(&count);
+			UINT pcount;
+			UINT pages[10];
+			candidatelistuielement->GetPageIndex(pages, 10, &pcount);
+
+			UINT cpage;
+			candidatelistuielement->GetCurrentPage(&cpage);
+
+			UINT end = count;
+			UINT start = 0;
+			if (cpage != pcount - 1) {
+				end = pages[cpage + 1];
+			}
+			start = pages[cpage];
+			if (pcount == 0) {
+				end = start = 0;
+			}
+	
 			{
-				for (UINT i = 0; i<count; ++i)
+				for (UINT i = start; i<end; ++i)
 				{
 					CComBSTR candidate;
 					if (SUCCEEDED(candidatelistuielement->GetString(i, &candidate)))
@@ -118,8 +135,12 @@ HRESULT MeowTextApp::UpdateUIElement(DWORD dwUIElementId)
 						candidatelist.push_back(text);
 					}
 				}
-
 			}
+
+			
+
+		
+
 			InvalidateRect(hwnd, NULL, NULL);
 			candidatelistuielement->GetSelection(&m_candidateSelection);
 		}

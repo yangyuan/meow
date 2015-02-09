@@ -78,7 +78,7 @@ private:
 	// initialize TextEditSink.
 	ITfContext   *_pTextEditSinkContext;
 	DWORD _dwTextEditSinkCookie;
-	BOOL _InitTextEditSink(ITfDocumentMgr *pDocMgr);
+	BOOL SyncDocumentMgr(ITfDocumentMgr *pDocMgr);
 
 	// initialize and uninitialize KeyEventSink.
 	BOOL _InitKeyEventSink();

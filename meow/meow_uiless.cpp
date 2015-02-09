@@ -82,7 +82,15 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::IsShown(BOOL *pbShow) {
 
 // ITfCandidateListUIElement
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetUpdatedFlags(DWORD *pdwFlags) {
-
+	/*
+	TF_CLUIE_DOCUMENTMGR
+	TF_CLUIE_COUNT
+	TF_CLUIE_SELECTION
+	TF_CLUIE_STRING
+	TF_CLUIE_PAGEINDEX
+	TF_CLUIE_CURRENTPAGE
+	*/
+	*pdwFlags = TF_CLUIE_COUNT | TF_CLUIE_STRING;
 	return S_OK;
 }
 
@@ -109,16 +117,19 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::GetString(UINT uIndex, BSTR *pstr) 
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetPageIndex(UINT *pIndex, UINT uSize, UINT *puPageCnt) {
-
+	*puPageCnt = 1;
+	if (pIndex != NULL) {
+		*pIndex = 0;
+	}
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::SetPageIndex(UINT *pIndex, UINT uPageCnt) {
-
+	// NOT SUPPORT YET
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetCurrentPage(UINT *puPage) {
-
+	*puPage = 0;
 	return S_OK;
 }
