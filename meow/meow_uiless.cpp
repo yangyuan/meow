@@ -95,6 +95,7 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::GetUpdatedFlags(DWORD *pdwFlags) {
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetDocumentMgr(ITfDocumentMgr **ppdim) {
+	MessageBox(NULL, L"XX", L"XX", MB_OK);
 	*ppdim = documentmgr;
 	return S_OK;
 }

@@ -120,6 +120,7 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	unsigned int x = Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
 
 	compositionmanager = new MeowCompositionManager(clientid, this);
+	uilessmanager = new MeowUILessManager(this);
 
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
@@ -148,9 +149,7 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 		else Meow::DebugLog("IsThreadFocus NO");
 	}
 
-	//threadmgr->CreateDocumentMgr(&pDocMgrFocus);
-
-	uilessmanager = new MeowUILessManager(this);
+	
 
 
 	if (!_InitThreadFocusSink())
@@ -341,7 +340,7 @@ STDAPI MeowTextService::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly,
 BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
 
-	uilessmanager->SetDocumentMgr(pDocMgr);
+	 uilessmanager->SetDocumentMgr(pDocMgr);
 	ITfSource *pSource;
 	BOOL fRet;
 
