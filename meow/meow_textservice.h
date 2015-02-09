@@ -2,6 +2,8 @@
 
 class MeowWindowManager;
 class MeowCompositionManager;
+class MeowUILessManager;
+
 class MeowTextService : 
 	public ITfTextInputProcessorEx,
 	public ITfThreadMgrEventSink,
@@ -55,12 +57,12 @@ public:
 
 	MeowWindowManager * windowmanager;
 	MeowCompositionManager * compositionmanager;
-
+	MeowUILessManager * uilessmanager;
+	ITfThreadMgr * threadmgr;
 
 	TfGuidAtom displayattribute;
 private:
 	ULONG reference;
-	ITfThreadMgr * threadmgr;
 	TfClientId clientid;
 	DWORD flags;
 

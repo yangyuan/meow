@@ -1,6 +1,7 @@
 #include "meow.h"
 #include "meow_composition.h"
 #include "meow_textservice.h"
+#include "meow_uiless.h"
 #include "meow_window.h"
 
 
@@ -100,6 +101,7 @@ BOOL MeowCompositionManager::OnKeyDown(ITfContext * context, WPARAM vkey){
 		Meow::DebugError("OnKeyDown Wait");
 		ret = ProcessKeyStroke(context, vkey, &eaten);
 	}
+	textservice->uilessmanager->Show();
 	if (ret) return eaten;
 	else return TRUE; // eat all if in error
 }

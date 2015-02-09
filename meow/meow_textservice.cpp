@@ -2,6 +2,7 @@
 #include "meow_window.h"
 #include "meow_textservice.h"
 #include "meow_composition.h"
+#include "meow_uiless.h"
 
 MeowTextService::MeowTextService() {
 	reference = 1;
@@ -149,6 +150,8 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	}
 
 	//threadmgr->CreateDocumentMgr(&pDocMgrFocus);
+
+	uilessmanager = new MeowUILessManager(this);
 
 
 	if (!_InitThreadFocusSink())

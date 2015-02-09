@@ -21,13 +21,13 @@ MeowTextApp::MeowTextApp(HWND _hwnd)
 	CComPtr<ITfSource> source;
 	hr = uielementmgr->QueryInterface(IID_ITfSource, (LPVOID*)&source);
 	hr = source->AdviseSink(IID_ITfUIElementSink, (ITfUIElementSink*)this, &uielementsinkcookie);
-	/*
+
 	CComPtr<ITfDocumentMgr> documentmgr;
 	CComPtr<ITfContext> context;
 	hr = threadmgr->CreateDocumentMgr(&documentmgr);
 	documentmgr->CreateContext(clientid, 0, (ITfContextOwnerCompositionSink*)this, &context, &editcookie);
 	documentmgr->Push(context);
-	threadmgr->SetFocus(documentmgr);*/
+	threadmgr->SetFocus(documentmgr);
 }
 
 VOID MeowTextApp::SetFocus() {
@@ -150,6 +150,10 @@ HRESULT MeowTextApp::OnStartComposition(ITfCompositionView *pComposition, BOOL *
 
 HRESULT MeowTextApp::OnUpdateComposition(ITfCompositionView *pComposition, ITfRange *pRangeNew)
 {
+	CComPtr<ITfRange> compRange = pRangeNew;
+	if (compRange == NULL) {
+		pComposition->GetRange(&compRange);
+	}
 	return S_OK;
 }
 

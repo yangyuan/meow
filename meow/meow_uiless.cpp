@@ -11,6 +11,26 @@ MeowUILessManager::MeowUILessManager(MeowTextService * _textservice) {
 MeowUILessManager::~MeowUILessManager() {
 }
 
+VOID MeowUILessManager::Show() {
+	ITfUIElementMgr * uielementmgr;
+	HRESULT hr = textservice->threadmgr->QueryInterface(IID_ITfUIElementMgr, (LPVOID*)&uielementmgr);
+	BOOL toshown;
+	DWORD uiid;
+	uielementmgr->BeginUIElement(this, &toshown, &uiid);
+
+	if (!toshown) {
+		uielementmgr->UpdateUIElement(uiid);
+	}
+	else {
+		
+	}
+
+}
+
+VOID MeowUILessManager::SetDocumentMgr(ITfDocumentMgr * _documentmgr) {
+	documentmgr = _documentmgr;
+}
+
 HRESULT STDMETHODCALLTYPE MeowUILessManager::QueryInterface(REFIID riid, void **ppvObj) {
 	if (ppvObj == NULL) return E_INVALIDARG;
 	*ppvObj = NULL;
@@ -47,7 +67,7 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::GetDescription(BSTR *pbstrDescripti
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetGUID(GUID *pguid) {
-	*pguid = GUID_UILESS_MANAGER;
+	*pguid = Meow::GUID_UILESS_MANAGER;
 	return S_OK;
 }
 
@@ -67,22 +87,24 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::GetUpdatedFlags(DWORD *pdwFlags) {
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetDocumentMgr(ITfDocumentMgr **ppdim) {
-
+	*ppdim = documentmgr;
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetCount(UINT *puCount) {
-
+	*puCount = 5;
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetSelection(UINT *puIndex) {
-
+	*puIndex = 1;
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowUILessManager::GetString(UINT uIndex, BSTR *pstr) {
-
+	CString cstr = L"∫Ú—°";
+	cstr.AppendFormat(L" %d", uIndex);
+	*pstr = cstr.AllocSysString();
 	return S_OK;
 }
 

@@ -3,12 +3,14 @@
 class MeowTextService;
 
 class MeowUILessManager :
-	public ITfUIElement,
 	public ITfCandidateListUIElement
 {
 public:
 	MeowUILessManager(MeowTextService * _textservice);
 	~MeowUILessManager();
+
+	VOID Show();
+	VOID SetDocumentMgr(ITfDocumentMgr * _documentmgr);
 
 	// IUnknown
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObj);
@@ -34,6 +36,7 @@ public:
 private:
 	ULONG reference;
 	MeowTextService * textservice;
+	ITfDocumentMgr * documentmgr;
 
 	BOOL shown;
 };
