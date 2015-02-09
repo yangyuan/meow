@@ -12,9 +12,9 @@ MeowTextApp::MeowTextApp(HWND _hwnd)
 	
 	hr= CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&threadmgr);
 
-	// active
+	// Active
 	hr = threadmgr->QueryInterface(IID_ITfThreadMgrEx, (LPVOID*)&threadmgrex);
-	hr = threadmgrex->ActivateEx(&clientid, TF_TMAE_UIELEMENTENABLEDONLY);
+	hr = threadmgrex->ActivateEx(&clientid, TF_TMAE_UIELEMENTENABLEDONLY); 
 
 	// ITfUIElementSink
 	hr = threadmgr->QueryInterface(IID_ITfUIElementMgr, (LPVOID*)&uielementmgr);
@@ -30,6 +30,9 @@ MeowTextApp::MeowTextApp(HWND _hwnd)
 	threadmgr->SetFocus(documentmgr);
 }
 
+VOID MeowTextApp::SetFocus() {
+
+}
 
 MeowTextApp::~MeowTextApp()
 {

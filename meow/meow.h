@@ -50,6 +50,7 @@ namespace Meow {
 	extern const CLSID CLSID_TEXTSERVICE;
 	extern const GUID  GUID_PROFILE;
 	extern const GUID  GUID_DISPLAY_ARRTIBUTE_INFO;
+	extern const GUID  GUID_UILESS_MANAGER;
 
 	static const GUID SupportCategories[] = {
 		GUID_TFCAT_TIP_KEYBOARD,

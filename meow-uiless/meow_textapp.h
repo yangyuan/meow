@@ -22,6 +22,7 @@ public:
 	HRESULT	STDMETHODCALLTYPE	EndUIElement(DWORD dwUIElementId);
 
 	std::vector<std::wstring> candidatelist;
+	VOID SetFocus();
 
 private:
 	HWND hwnd;
