@@ -40,47 +40,38 @@ HRESULT STDMETHODCALLTYPE MeowTextService::QueryInterface(REFIID riid, void **pp
 
 	if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTextInputProcessor))
 	{
-		Meow::DebugLog("QUERY IID_ITfTextInputProcessor");
 		*ppvObj = (ITfTextInputProcessor *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfTextInputProcessorEx))
 	{
-		Meow::DebugLog("QUERY IID_ITfTextInputProcessorEx");
 		*ppvObj = (ITfTextInputProcessorEx *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfThreadMgrEventSink))
 	{
-		Meow::DebugLog("QUERY IID_ITfThreadMgrEventSink");
 		*ppvObj = (ITfThreadMgrEventSink *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfThreadFocusSink)) {
-		Meow::DebugLog("QUERY IID_ITfThreadFocusSink");
 		*ppvObj = (ITfThreadFocusSink *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
 	{
-		Meow::DebugLog("QUERY IID_ITfKeyEventSink");
 		*ppvObj = (ITfKeyEventSink *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
 	{
-		Meow::DebugLog("QUERY IID_ITfCompositionSink");
 		*ppvObj = (ITfCompositionSink *)this->compositionmanager;
 	}
 	else if (IsEqualIID(riid, IID_ITfTextEditSink))
 	{
-		Meow::DebugLog("QUERY IID_ITfTextEditSink");
 		// better use compositionmanager
 		*ppvObj = (ITfTextEditSink *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
 	{
-		Meow::DebugLog("QUERY ITfDisplayAttributeProvider");
 		*ppvObj = (ITfDisplayAttributeProvider *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfDisplayAttributeCollectionProvider))
 	{
-		Meow::DebugLog("QUERY ITfDisplayAttributeCollectionProvider");
 		//*ppvObj = (ITfDisplayAttributeProvider *)this;
 	}
 	else {
@@ -88,7 +79,6 @@ HRESULT STDMETHODCALLTYPE MeowTextService::QueryInterface(REFIID riid, void **pp
 		StringFromIID(riid, &str);
 		_bstr_t bs(str, false);
 		CHAR * xx = bs;
-		Meow::DebugError(bs);
 	}
 
 	if (*ppvObj)
@@ -113,7 +103,6 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	clientid = tfClientId;
 	threadmgr->AddRef();
 	flags = dwFlags;
-	Meow::DebugVal(flags);
 
 	ULONG_PTR gdiplustoken;
 	Gdiplus::GdiplusStartupInput gdiplusstartupinput;
@@ -130,12 +119,11 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	HRESULT hr = NULL;
 	hr = threadmgr->GetFocus(&pDocMgrFocus);
 	if (hr == S_OK) {
-		Meow::DebugLog("GetFocus OK");
 	}
 	else {
 
 	}
-	Meow::DebugVal((DWORD)hr);
+
 	if ((hr == S_OK) &&
 		(pDocMgrFocus != NULL))
 	{
@@ -145,12 +133,8 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	BOOL foc;
 	hr = threadmgr->IsThreadFocus(&foc);
 	if (hr == S_OK) {
-		if (foc) Meow::DebugLog("IsThreadFocus TRUE");
-		else Meow::DebugLog("IsThreadFocus NO");
+
 	}
-
-	
-
 
 	if (!_InitThreadFocusSink())
 		goto ExitError;
@@ -166,7 +150,6 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 		goto ExitError;
 	}
 
-	Meow::DebugLog("Activate SUCCESS");
 	return S_OK;
 ExitError:
 	Deactivate(); // cleanup any half-finished init
@@ -175,7 +158,6 @@ ExitError:
 
 HRESULT STDMETHODCALLTYPE MeowTextService::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId) {
 	return ActivateEx(pThreadMgr, tfClientId, 0);
-	Meow::DebugLog("Activate No Ex");
 }
 HRESULT STDMETHODCALLTYPE MeowTextService::Deactivate() {
 
@@ -202,14 +184,12 @@ HRESULT STDMETHODCALLTYPE MeowTextService::Deactivate() {
 
 HRESULT STDMETHODCALLTYPE MeowTextService::OnSetThreadFocus()
 {
-	Meow::DebugLog("OnSetThreadFocus");
 	windowmanager->ShowStatusWindow();
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowTextService::OnKillThreadFocus()
 {
-	Meow::DebugLog("OnKillThreadFocus");
 	windowmanager->HideStatusWindow();
 	return S_OK;
 }
@@ -256,13 +236,11 @@ VOID MeowTextService::_UninitThreadFocusSink()
 
 STDAPI MeowTextService::OnInitDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
-	Meow::DebugLog("OnInitDocumentMgr");
 	return S_OK;
 }
 
 STDAPI MeowTextService::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
-	Meow::DebugLog("OnUninitDocumentMgr");
 	return S_OK;
 }
 
@@ -432,7 +410,6 @@ STDAPI MeowTextService::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM 
 
 STDAPI MeowTextService::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	Meow::DebugLog("MeowTextService::OnKeyDown");
 	*pfEaten = compositionmanager->OnKeyDown(pContext, wParam);
 	return S_OK;
 }
@@ -473,13 +450,11 @@ BOOL MeowTextService::_InitKeyEventSink()
 	HRESULT hr;
 
 	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&pKeystrokeMgr) != S_OK) {
-		Meow::DebugLog("IID_ITfKeystrokeMgr FAILED");
 		return FALSE;
 	}
 
 	hr = pKeystrokeMgr->AdviseKeyEventSink(clientid, (ITfKeyEventSink *)this, TRUE);
 	if (hr != S_OK) {
-		Meow::DebugLog("AdviseKeyEventSink FAILED 1");
 	}
 	pKeystrokeMgr->Release();
 
@@ -608,12 +583,6 @@ STDAPI MeowTextService::EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDis
 	}
 	return S_OK;
 }
-
-//+---------------------------------------------------------------------------
-//
-// ITfDisplayAttributeProvider::GetDisplayAttributeInfo
-//
-//----------------------------------------------------------------------------
 
 STDAPI MeowTextService::GetDisplayAttributeInfo(__RPC__in REFGUID guidInfo, __RPC__deref_out_opt ITfDisplayAttributeInfo **ppInfo)
 {

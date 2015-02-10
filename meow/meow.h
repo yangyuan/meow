@@ -28,14 +28,6 @@ HRESULT __stdcall DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
 HRESULT __stdcall DllCanUnloadNow(void);
 
 namespace Meow {
-	VOID DebugComResult(HRESULT hr);
-	VOID DebugLog(char *);
-	VOID DebugPtr(void *);
-	VOID DebugVal(int i);
-	VOID DebugVal(DWORD d);
-	VOID DebugError(char *);
-	VOID DebugKeyStroke(WPARAM vkey, char * info);
-
 	VOID DllAddRef();
 	VOID DllRelease();
 

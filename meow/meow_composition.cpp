@@ -44,7 +44,6 @@ ULONG STDMETHODCALLTYPE MeowCompositionManager::Release() {
 
 
 HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition) {
-	Meow::DebugLog("OnCompositionTerminated");
 	// windows want your composition terminated
 	// maybe target app closed or sth
 	// accroding to msdn, you dont need to do anything here. but IDK about the release of pComposition
@@ -55,13 +54,13 @@ HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnCompositionTerminated(TfEdit
 		composition = NULL;
 	}
 	else {
-		Meow::DebugError("OnCompositionTerminated but not current composition");
+		
 	}
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord) {
-	//Meow::DebugLog("OnEndEdit");
+
 	// called everything when EditSession is done
 	// maybe not necessary in SYNC call
 	return S_OK;
@@ -239,7 +238,7 @@ VOID MeowCompositionManager::DoCompositionBegin(TfEditCookie ec) {
 				BOOL fClipped;
 				HRESULT hrx = view->GetTextExt(ec, tfselection.range, &rect, &fClipped);
 				if (hrx != S_OK) {
-					Meow::DebugError("GetTextExt");
+					
 				}
 				textservice->windowmanager->AdjustCompositionWindow(&rect, NULL);
 				tfselection.range->Release();
@@ -252,7 +251,7 @@ VOID MeowCompositionManager::DoCompositionEnd(TfEditCookie ec) {
 	if (composition != NULL) {
 		HRESULT hr = composition->EndComposition(ec);
 		if (hr != S_OK) {
-			Meow::DebugError("EndComposition failed");
+			
 		}
 		composition->Release();
 		composition = NULL;
