@@ -51,6 +51,7 @@ public:
 	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
 
+
 	// ITfDisplayAttributeProvider
 	HRESULT STDMETHODCALLTYPE EnumDisplayAttributeInfo( IEnumTfDisplayAttributeInfo **ppEnum);
 	HRESULT STDMETHODCALLTYPE GetDisplayAttributeInfo( REFGUID guid, ITfDisplayAttributeInfo **ppInfo);
