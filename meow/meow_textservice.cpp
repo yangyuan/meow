@@ -377,21 +377,6 @@ BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
 	return fRet;
 }
 
-HRESULT STDMETHODCALLTYPE MeowTextService::OnKeyDown(WPARAM wParam, LPARAM lParam, BOOL *pfEaten) {
-	return S_OK;
-}
-HRESULT STDMETHODCALLTYPE MeowTextService::OnKeyUp(WPARAM wParam, LPARAM lParam, BOOL *pfEaten) {
-	return S_OK;
-}
-HRESULT STDMETHODCALLTYPE MeowTextService::OnTestKeyDown(WPARAM wParam, LPARAM lParam, BOOL *pfEaten) {
-	return S_OK;
-}
-HRESULT STDMETHODCALLTYPE MeowTextService::OnTestKeyUp(WPARAM wParam, LPARAM lParam, BOOL *pfEaten) {
-	return S_OK;
-}
-
-
-
 STDAPI MeowTextService::OnSetFocus(BOOL fForeground)
 {
 	// may need to store and resume composition here
