@@ -2,12 +2,12 @@
 
 class MeowTextService;
 
-class MeowUILessManager :
+class MeowCandidateManager :
 	public ITfCandidateListUIElement
 {
 public:
-	MeowUILessManager(MeowTextService * _textservice);
-	~MeowUILessManager();
+	MeowCandidateManager(MeowTextService * _textservice);
+	~MeowCandidateManager();
 
 	VOID Show();
 	VOID SetDocumentMgr(ITfDocumentMgr * _documentmgr);

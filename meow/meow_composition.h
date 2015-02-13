@@ -80,7 +80,7 @@ public:
 	ULONG STDMETHODCALLTYPE AddRef();
 	ULONG STDMETHODCALLTYPE Release();
 
-	STDMETHODIMP DoEditSession(TfEditCookie ec);
+	HRESULT STDMETHODCALLTYPE DoEditSession(TfEditCookie ec);
 private:
 	ULONG reference;
 	MeowCompositionManager * compositionmanager;

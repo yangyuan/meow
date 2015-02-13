@@ -2,7 +2,7 @@
 
 class MeowWindowManager;
 class MeowCompositionManager;
-class MeowUILessManager;
+class MeowCandidateManager;
 
 class MeowTextService : 
 	public ITfTextInputProcessorEx,
@@ -16,7 +16,7 @@ public:
 	MeowTextService();
 	~MeowTextService();
 
-	// traditional ClassFactory factory callback
+	// ClassFactory factory callback
 	static HRESULT CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObj);
 
 	// IUnknown
@@ -26,39 +26,40 @@ public:
 
 	// ITfTextInputProcessorEx
 	HRESULT STDMETHODCALLTYPE ActivateEx(ITfThreadMgr *ptim, TfClientId tid, DWORD dwFlags);
-	HRESULT STDMETHODCALLTYPE Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId);
-	HRESULT STDMETHODCALLTYPE Deactivate();
+
+	// ITfTextInputProcessor
+	HRESULT STDMETHODCALLTYPE Activate(ITfThreadMgr *ptim, TfClientId tid);
+	HRESULT STDMETHODCALLTYPE Deactivate(void);
 
 	// ITfThreadFocusSink
-	HRESULT STDMETHODCALLTYPE OnSetThreadFocus();
-	HRESULT STDMETHODCALLTYPE OnKillThreadFocus();
+	HRESULT STDMETHODCALLTYPE OnSetThreadFocus(void);
+	HRESULT STDMETHODCALLTYPE OnKillThreadFocus(void);
 
 	// ITfThreadMgrEventSink
-	STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pDocMgr);
-	STDMETHODIMP OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr);
-	STDMETHODIMP OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus);
-	STDMETHODIMP OnPushContext(ITfContext *pContext);
-	STDMETHODIMP OnPopContext(ITfContext *pContext);
+	HRESULT STDMETHODCALLTYPE OnInitDocumentMgr(ITfDocumentMgr *pdim);
+	HRESULT STDMETHODCALLTYPE OnUninitDocumentMgr(ITfDocumentMgr *pdim);
+	HRESULT STDMETHODCALLTYPE OnSetFocus(ITfDocumentMgr *pdimFocus, ITfDocumentMgr *pdimPrevFocus);
+	HRESULT STDMETHODCALLTYPE OnPushContext(ITfContext *pic);
+	HRESULT STDMETHODCALLTYPE OnPopContext(ITfContext *pic);
 
 	// ITfTextEditSink
-	STDMETHODIMP OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
+	HRESULT STDMETHODCALLTYPE OnEndEdit(ITfContext *pic, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
 
 	// ITfKeyEventSink
-	STDMETHODIMP OnSetFocus(BOOL fForeground);
-	STDMETHODIMP OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
-	STDMETHODIMP OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
-	STDMETHODIMP OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
-	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
-	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
-
+	HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL fForeground);
+	HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnKeyDown(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext *pic, REFGUID rguid, BOOL *pfEaten);
 
 	// ITfDisplayAttributeProvider
-	HRESULT STDMETHODCALLTYPE EnumDisplayAttributeInfo( IEnumTfDisplayAttributeInfo **ppEnum);
-	HRESULT STDMETHODCALLTYPE GetDisplayAttributeInfo( REFGUID guid, ITfDisplayAttributeInfo **ppInfo);
+	HRESULT STDMETHODCALLTYPE EnumDisplayAttributeInfo(IEnumTfDisplayAttributeInfo **ppEnum);
+	HRESULT STDMETHODCALLTYPE GetDisplayAttributeInfo(REFGUID guid, ITfDisplayAttributeInfo **ppInfo);
 
-	MeowWindowManager * windowmanager;
-	MeowCompositionManager * compositionmanager;
-	MeowUILessManager * uilessmanager;
+	MeowWindowManager *      window_manager;
+	MeowCompositionManager * composition_manager;
+	MeowCandidateManager *   candidate_manager;
 	ITfThreadMgr * threadmgr;
 
 	TfGuidAtom displayattribute;

@@ -1,17 +1,17 @@
 #include "meow.h"
-#include "meow_uiless.h"
+#include "meow_candidate.h"
 #include "meow_textservice.h"
 
-MeowUILessManager::MeowUILessManager(MeowTextService * _textservice) {
+MeowCandidateManager::MeowCandidateManager(MeowTextService * _textservice) {
 	reference = 1;
 	textservice = _textservice;
 
 	shown = FALSE;
 }
-MeowUILessManager::~MeowUILessManager() {
+MeowCandidateManager::~MeowCandidateManager() {
 }
 
-VOID MeowUILessManager::Show() {
+VOID MeowCandidateManager::Show() {
 	ITfUIElementMgr * uielementmgr;
 	HRESULT hr = textservice->threadmgr->QueryInterface(IID_ITfUIElementMgr, (LPVOID*)&uielementmgr);
 	BOOL toshown;
@@ -27,11 +27,11 @@ VOID MeowUILessManager::Show() {
 
 }
 
-VOID MeowUILessManager::SetDocumentMgr(ITfDocumentMgr * _documentmgr) {
+VOID MeowCandidateManager::SetDocumentMgr(ITfDocumentMgr * _documentmgr) {
 	documentmgr = _documentmgr;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::QueryInterface(REFIID riid, void **ppvObj) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::QueryInterface(REFIID riid, void **ppvObj) {
 	if (ppvObj == NULL) return E_INVALIDARG;
 	*ppvObj = NULL;
 
@@ -52,36 +52,36 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::QueryInterface(REFIID riid, void **
 
 	return E_NOINTERFACE;
 }
-ULONG STDMETHODCALLTYPE MeowUILessManager::AddRef() {
+ULONG STDMETHODCALLTYPE MeowCandidateManager::AddRef() {
 	return ++reference;
 }
-ULONG STDMETHODCALLTYPE MeowUILessManager::Release() {
+ULONG STDMETHODCALLTYPE MeowCandidateManager::Release() {
 	if (--reference <= 0) delete this;
 	return reference;
 }
 
 // ITfUIElement
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetDescription(BSTR *pbstrDescription) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetDescription(BSTR *pbstrDescription) {
 	*pbstrDescription = SysAllocString(L"");
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetGUID(GUID *pguid) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetGUID(GUID *pguid) {
 	*pguid = Meow::GUID_UILESS_MANAGER;
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::Show(BOOL bShow) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::Show(BOOL bShow) {
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::IsShown(BOOL *pbShow) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::IsShown(BOOL *pbShow) {
 	*pbShow = shown;
 	return S_OK;
 }
 
 // ITfCandidateListUIElement
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetUpdatedFlags(DWORD *pdwFlags) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetUpdatedFlags(DWORD *pdwFlags) {
 	/*
 	TF_CLUIE_DOCUMENTMGR
 	TF_CLUIE_COUNT
@@ -94,30 +94,30 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::GetUpdatedFlags(DWORD *pdwFlags) {
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetDocumentMgr(ITfDocumentMgr **ppdim) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetDocumentMgr(ITfDocumentMgr **ppdim) {
 	MessageBox(NULL, L"XX", L"XX", MB_OK);
 	*ppdim = documentmgr;
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetCount(UINT *puCount) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetCount(UINT *puCount) {
 	*puCount = 5;
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetSelection(UINT *puIndex) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetSelection(UINT *puIndex) {
 	*puIndex = 1;
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetString(UINT uIndex, BSTR *pstr) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetString(UINT uIndex, BSTR *pstr) {
 	CString cstr = L"ºòÑ¡";
 	cstr.AppendFormat(L" %d", uIndex);
 	*pstr = cstr.AllocSysString();
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetPageIndex(UINT *pIndex, UINT uSize, UINT *puPageCnt) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetPageIndex(UINT *pIndex, UINT uSize, UINT *puPageCnt) {
 	*puPageCnt = 1;
 	if (pIndex != NULL) {
 		*pIndex = 0;
@@ -125,12 +125,12 @@ HRESULT STDMETHODCALLTYPE MeowUILessManager::GetPageIndex(UINT *pIndex, UINT uSi
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::SetPageIndex(UINT *pIndex, UINT uPageCnt) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::SetPageIndex(UINT *pIndex, UINT uPageCnt) {
 	// NOT SUPPORT YET
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE MeowUILessManager::GetCurrentPage(UINT *puPage) {
+HRESULT STDMETHODCALLTYPE MeowCandidateManager::GetCurrentPage(UINT *puPage) {
 	*puPage = 0;
 	return S_OK;
 }

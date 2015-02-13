@@ -2,7 +2,7 @@
 #include "meow_window.h"
 #include "meow_textservice.h"
 #include "meow_composition.h"
-#include "meow_uiless.h"
+#include "meow_candidate.h"
 
 MeowTextService::MeowTextService() {
 	reference = 1;
@@ -12,11 +12,11 @@ MeowTextService::MeowTextService() {
 	_dwThreadFocusSinkCookie = TF_INVALID_COOKIE;
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 
-	windowmanager  = new MeowWindowManager(Meow::hinstance);
+	window_manager  = new MeowWindowManager(Meow::hinstance);
 	Meow::DllAddRef();
 }
 MeowTextService::~MeowTextService() {
-	delete windowmanager;
+	delete window_manager;
 	Meow::DllRelease();
 }
 
@@ -59,7 +59,7 @@ HRESULT STDMETHODCALLTYPE MeowTextService::QueryInterface(REFIID riid, void **pp
 	}
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
 	{
-		*ppvObj = (ITfCompositionSink *)this->compositionmanager;
+		*ppvObj = (ITfCompositionSink *)this->composition_manager;
 	}
 	else if (IsEqualIID(riid, IID_ITfTextEditSink))
 	{
@@ -108,8 +108,8 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	Gdiplus::GdiplusStartupInput gdiplusstartupinput;
 	unsigned int x = Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
 
-	compositionmanager = new MeowCompositionManager(clientid, this);
-	uilessmanager = new MeowUILessManager(this);
+	composition_manager = new MeowCompositionManager(clientid, this);
+	candidate_manager = new MeowCandidateManager(this);
 
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
@@ -172,7 +172,7 @@ HRESULT STDMETHODCALLTYPE MeowTextService::Deactivate() {
 
 
 
-	 delete compositionmanager;
+	 delete composition_manager;
 
 	if (threadmgr != NULL)
 	{
@@ -184,13 +184,13 @@ HRESULT STDMETHODCALLTYPE MeowTextService::Deactivate() {
 
 HRESULT STDMETHODCALLTYPE MeowTextService::OnSetThreadFocus()
 {
-	windowmanager->ShowStatusWindow();
+	window_manager->ShowStatusWindow();
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE MeowTextService::OnKillThreadFocus()
 {
-	windowmanager->HideStatusWindow();
+	window_manager->HideStatusWindow();
 	return S_OK;
 }
 
@@ -246,9 +246,9 @@ STDAPI MeowTextService::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 
 STDAPI MeowTextService::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
+	// never happend in XP
 
-
-	compositionmanager->Switch(pDocMgrFocus, pDocMgrPrevFocus);
+	composition_manager->Switch(pDocMgrFocus, pDocMgrPrevFocus);
 
 	SyncDocumentMgr(pDocMgrFocus);
 	return S_OK;
@@ -309,7 +309,7 @@ void MeowTextService::_UninitThreadMgrEventSink()
 STDAPI MeowTextService::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
 {
 	// FIXME: should register compositionmanager as ITfTextEditSink
-	compositionmanager->OnEndEdit(pContext, ecReadOnly, pEditRecord);
+	composition_manager->OnEndEdit(pContext, ecReadOnly, pEditRecord);
 	return S_OK;
 }
 
@@ -317,7 +317,7 @@ STDAPI MeowTextService::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly,
 BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
 
-	 uilessmanager->SetDocumentMgr(pDocMgr);
+	candidate_manager->SetDocumentMgr(pDocMgr);
 	ITfSource *pSource;
 	BOOL fRet;
 
@@ -394,25 +394,25 @@ STDAPI MeowTextService::OnSetFocus(BOOL fForeground)
 
 STDAPI MeowTextService::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	*pfEaten = compositionmanager->OnTestKeyDown(pContext, wParam);
+	*pfEaten = composition_manager->OnTestKeyDown(pContext, wParam);
 	return S_OK;
 }
 
 STDAPI MeowTextService::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	*pfEaten = compositionmanager->OnTestKeyUp(pContext, wParam);
+	*pfEaten = composition_manager->OnTestKeyUp(pContext, wParam);
 	return S_OK;
 }
 
 STDAPI MeowTextService::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	*pfEaten = compositionmanager->OnKeyDown(pContext, wParam);
+	*pfEaten = composition_manager->OnKeyDown(pContext, wParam);
 	return S_OK;
 }
 
 STDAPI MeowTextService::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	*pfEaten = compositionmanager->OnKeyUp(pContext, wParam);
+	*pfEaten = composition_manager->OnKeyUp(pContext, wParam);
 	return S_OK;
 }
 

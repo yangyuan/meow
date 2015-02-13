@@ -74,7 +74,7 @@
     <ClInclude Include="meow_composition.h" />
     <ClInclude Include="meow_registry.h" />
     <ClInclude Include="meow_textservice.h" />
-    <ClInclude Include="meow_uiless.h" />
+    <ClInclude Include="meow_candidate.h" />
     <ClInclude Include="meow_window.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -89,7 +89,7 @@
     <ClCompile Include="meow_composition.cpp" />
     <ClCompile Include="meow_registry.cpp" />
     <ClCompile Include="meow_textservice.cpp" />
-    <ClCompile Include="meow_uiless.cpp" />
+    <ClCompile Include="meow_candidate.cpp" />
     <ClCompile Include="meow_window.cpp" />
   </ItemGroup>
   <ItemGroup>
