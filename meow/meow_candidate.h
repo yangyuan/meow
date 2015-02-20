@@ -11,6 +11,7 @@ public:
 
 	VOID Show();
 	VOID SetDocumentMgr(ITfDocumentMgr * _documentmgr);
+	VOID SetUIElementMgr(ITfUIElementMgr * _uielementmgr);
 
 	// IUnknown
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObj);
@@ -36,7 +37,7 @@ public:
 private:
 	ULONG reference;
 	MeowTextService * textservice;
-	ITfDocumentMgr * documentmgr;
-
+	ITfDocumentMgr  * documentmgr;
+	ITfUIElementMgr * uielementmgr;
 	BOOL shown;
 };

@@ -50,21 +50,21 @@ HRESULT STDMETHODCALLTYPE MeowTextService::QueryInterface(REFIID riid, void **pp
 	{
 		*ppvObj = (ITfThreadMgrEventSink *)this;
 	}
-	else if (IsEqualIID(riid, IID_ITfThreadFocusSink)) {
-		*ppvObj = (ITfThreadFocusSink *)this;
-	}
-	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
+	else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
 	{
-		*ppvObj = (ITfKeyEventSink *)this;
+		*ppvObj = (ITfThreadFocusSink *)this;
 	}
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
 	{
 		*ppvObj = (ITfCompositionSink *)this->composition_manager;
 	}
+	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
+	{
+		*ppvObj = (ITfKeyEventSink *)this->composition_manager;
+	}
 	else if (IsEqualIID(riid, IID_ITfTextEditSink))
 	{
-		// better use compositionmanager
-		*ppvObj = (ITfTextEditSink *)this;
+		*ppvObj = (ITfTextEditSink *)this->composition_manager;
 	}
 	else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
 	{
@@ -72,7 +72,7 @@ HRESULT STDMETHODCALLTYPE MeowTextService::QueryInterface(REFIID riid, void **pp
 	}
 	else if (IsEqualIID(riid, IID_ITfDisplayAttributeCollectionProvider))
 	{
-		//*ppvObj = (ITfDisplayAttributeProvider *)this;
+		// 
 	}
 	else {
 		LPOLESTR str;
@@ -109,43 +109,37 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 	Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
 
 	candidate_manager = new MeowCandidateManager(this);
+	{
+		ITfUIElementMgr * uielementmgr;
+		HRESULT hr = threadmgr->QueryInterface(IID_ITfUIElementMgr, (LPVOID*)&uielementmgr);
+		if (hr == S_OK) {
+			candidate_manager->SetUIElementMgr(uielementmgr);
+		}
+	}
+
 	composition_manager = new MeowCompositionManager(clientid, this);
 
 	if (!Meow::InitThreadMgrEventSink(threadmgr, this, &threadmgreventsink_cookie))
 		goto ExitError;
 
-
-	ITfDocumentMgr *pDocMgrFocus;
-	HRESULT hr = NULL;
-	hr = threadmgr->GetFocus(&pDocMgrFocus);
-	if (hr == S_OK) {
-	}
-	else {
-
-	}
-
-	if ((hr == S_OK) &&
-		(pDocMgrFocus != NULL))
-	{
-		SyncDocumentMgr(pDocMgrFocus);
-		pDocMgrFocus->Release();
-	}
-	BOOL foc;
-	hr = threadmgr->IsThreadFocus(&foc);
-	if (hr == S_OK) {
-
-	}
-
 	if (!Meow::InitThreadFocusSink(threadmgr, this, &threadfocussink_cookie))
 		goto ExitError;
 
-	if (!Meow::InitKeyEventSink(threadmgr, this, clientid))
+	if (!Meow::InitKeyEventSink(threadmgr, composition_manager, clientid))
 		goto ExitError;
 
-	if (!_InitDisplayAttributeGuidAtom())
+
+
+	/*
+	ITfDocumentMgr *pDocMgrFocus;
+	HRESULT hr = NULL;
+	hr = threadmgr->GetFocus(&pDocMgrFocus);
+	if ((hr == S_OK) && (pDocMgrFocus != NULL))
 	{
-		goto ExitError;
+	SyncDocumentMgr(pDocMgrFocus);
+	pDocMgrFocus->Release();
 	}
+	*/
 
 	return S_OK;
 ExitError:
@@ -201,8 +195,9 @@ STDAPI MeowTextService::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr 
 	// never happend in XP
 
 	composition_manager->Switch(pDocMgrFocus, pDocMgrPrevFocus);
+	candidate_manager->SetDocumentMgr(pDocMgrFocus);
 
-	SyncDocumentMgr(pDocMgrFocus);
+	
 	return S_OK;
 }
 
@@ -216,129 +211,7 @@ STDAPI MeowTextService::OnPopContext(ITfContext *pContext)
 }
 
 
-STDAPI MeowTextService::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
-{
-	// FIXME: should register compositionmanager as ITfTextEditSink
-	composition_manager->OnEndEdit(pContext, ecReadOnly, pEditRecord);
-	return S_OK;
-}
-
-
-BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
-{
-
-	candidate_manager->SetDocumentMgr(pDocMgr);
-
-	// When DocumentMgr changed, we need to reset the Sinks binded to the DocumentMgr
-	// clear previous Sink
-	if (_pTextEditSinkContext != NULL && texteditsink_cookie != TF_INVALID_COOKIE)
-	{
-		Meow::UninitTextEditSink(_pTextEditSinkContext, &texteditsink_cookie);
-		_pTextEditSinkContext->Release();
-		_pTextEditSinkContext = NULL;
-	}
-
-	if (pDocMgr == NULL)
-	{
-		return TRUE; // caller just wanted to clear the previous sink
-	}
-
-	// setup a new sink advised to the topmost context of the document
-	if (pDocMgr->GetTop(&_pTextEditSinkContext) == S_OK) {
-		Meow::InitTextEditSink(_pTextEditSinkContext, this, &texteditsink_cookie);
-		_pTextEditSinkContext->Release();
-		return TRUE;
-	} else {
-		_pTextEditSinkContext = NULL;
-		return FALSE;
-	}
-}
-
-STDAPI MeowTextService::OnSetFocus(BOOL fForeground)
-{
-	// may need to store and resume composition here
-
-	ITfDocumentMgr * pDocMgrFocus;
-	HRESULT hr = threadmgr->GetFocus(&pDocMgrFocus);
-	if ((hr == S_OK) && (pDocMgrFocus != NULL))
-	{
-		SyncDocumentMgr(pDocMgrFocus);
-		pDocMgrFocus->Release();
-	}
-	return S_OK;
-}
-
-STDAPI MeowTextService::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
-{
-	*pfEaten = composition_manager->OnTestKeyDown(pContext, wParam);
-	return S_OK;
-}
-
-STDAPI MeowTextService::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
-{
-	*pfEaten = composition_manager->OnTestKeyUp(pContext, wParam);
-	return S_OK;
-}
-
-STDAPI MeowTextService::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
-{
-	*pfEaten = composition_manager->OnKeyDown(pContext, wParam);
-	return S_OK;
-}
-
-STDAPI MeowTextService::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
-{
-	*pfEaten = composition_manager->OnKeyUp(pContext, wParam);
-	return S_OK;
-}
-
-STDAPI MeowTextService::OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten)
-{
-	/*
-	if (IsEqualGUID(rguid, GUID_PRESERVEDKEY_ONOFF))
-	{
-		BOOL fOpen = _IsKeyboardOpen();
-		_SetKeyboardOpen(fOpen ? FALSE : TRUE);
-		*pfEaten = TRUE;
-	}
-	else
-	{
-		*pfEaten = FALSE;
-	}
-	*/
-	return S_OK;
-}
-
-
-
-BOOL MeowTextService::_InitDisplayAttributeGuidAtom()
-{
-	// FIXME: COMLESS MODE?
-	ITfCategoryMgr* pCategoryMgr = nullptr;
-	HRESULT hr = CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
-
-	if (FAILED(hr))
-	{
-		return FALSE;
-	}
-
-	// FIXME: GUID_DISPLAY_ARRTIBUTE_INFO unregister
-	// register the display attribute for input text.
-	hr = pCategoryMgr->RegisterGUID(Meow::GUID_DISPLAY_ARRTIBUTE_INFO, &displayattribute);
-	if (FAILED(hr))
-	{
-		goto Exit;
-	}
-
-Exit:
-	pCategoryMgr->Release();
-
-	return (hr == S_OK);
-}
-
-
-
-STDAPI MeowTextService::EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDisplayAttributeInfo **ppEnum)
+STDAPI MeowTextService::EnumDisplayAttributeInfo(IEnumTfDisplayAttributeInfo **ppEnum)
 {
 	if (ppEnum == nullptr)
 	{
@@ -353,7 +226,7 @@ STDAPI MeowTextService::EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDis
 	return S_OK;
 }
 
-STDAPI MeowTextService::GetDisplayAttributeInfo(__RPC__in REFGUID guidInfo, __RPC__deref_out_opt ITfDisplayAttributeInfo **ppInfo)
+STDAPI MeowTextService::GetDisplayAttributeInfo(REFGUID guidInfo, ITfDisplayAttributeInfo **ppInfo)
 {
 	if (ppInfo == nullptr)
 	{
@@ -491,3 +364,55 @@ VOID Meow::UninitTextEditSink(ITfContext * context, DWORD * cookie)
 	}
 	*cookie = TF_INVALID_COOKIE;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+BOOL InitDisplayAttributeGuidAtom()
+{
+// FIXME: COMLESS MODE?
+ITfCategoryMgr* pCategoryMgr = nullptr;
+HRESULT hr = CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
+
+if (FAILED(hr))
+{
+return FALSE;
+}
+
+// FIXME: GUID_DISPLAY_ARRTIBUTE_INFO unregister
+// register the display attribute for input text.
+hr = pCategoryMgr->RegisterGUID(Meow::GUID_DISPLAY_ARRTIBUTE_INFO, &displayattribute);
+if (FAILED(hr))
+{
+goto Exit;
+}
+
+Exit:
+pCategoryMgr->Release();
+
+return (hr == S_OK);
+}
+*/
+

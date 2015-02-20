@@ -12,23 +12,29 @@ MeowCandidateManager::~MeowCandidateManager() {
 }
 
 VOID MeowCandidateManager::Show() {
-	ITfUIElementMgr * uielementmgr;
-	HRESULT hr = textservice->threadmgr->QueryInterface(IID_ITfUIElementMgr, (LPVOID*)&uielementmgr);
-	BOOL toshown;
-	DWORD uiid;
-	uielementmgr->BeginUIElement(this, &toshown, &uiid);
 
-	if (!toshown) {
-		uielementmgr->UpdateUIElement(uiid);
-	}
-	else {
-		
-	}
+	if (uielementmgr != NULL) {
+		BOOL toshown;
+		DWORD uiid;
+		uielementmgr->BeginUIElement(this, &toshown, &uiid);
 
+		if (!toshown) {
+			uielementmgr->UpdateUIElement(uiid);
+		}
+		else {
+
+		}
+	}
 }
 
 VOID MeowCandidateManager::SetDocumentMgr(ITfDocumentMgr * _documentmgr) {
+	// FIXME: reference
 	documentmgr = _documentmgr;
+}
+
+VOID MeowCandidateManager::SetUIElementMgr(ITfUIElementMgr * _uielementmgr) {
+	// FIXME: reference
+	uielementmgr = _uielementmgr;
 }
 
 HRESULT STDMETHODCALLTYPE MeowCandidateManager::QueryInterface(REFIID riid, void **ppvObj) {

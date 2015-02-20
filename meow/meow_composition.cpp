@@ -43,6 +43,71 @@ ULONG STDMETHODCALLTYPE MeowCompositionManager::Release() {
 }
 
 
+
+STDAPI MeowCompositionManager::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
+{	// called everything when EditSession is done
+	// maybe not necessary in SYNC call
+	return S_OK;
+}
+
+
+STDAPI MeowCompositionManager::OnSetFocus(BOOL fForeground)
+{
+	// may need to store and resume composition here
+	/*
+	ITfDocumentMgr * pDocMgrFocus;
+	HRESULT hr = threadmgr->GetFocus(&pDocMgrFocus);
+	if ((hr == S_OK) && (pDocMgrFocus != NULL))
+	{
+		SyncDocumentMgr(pDocMgrFocus);
+		pDocMgrFocus->Release();
+	}
+	*/
+	return S_OK;
+}
+
+STDAPI MeowCompositionManager::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+	*pfEaten = OnTestKeyDown(pContext, wParam);
+	return S_OK;
+}
+
+STDAPI MeowCompositionManager::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+	*pfEaten = OnTestKeyUp(pContext, wParam);
+	return S_OK;
+}
+
+STDAPI MeowCompositionManager::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+	*pfEaten = OnKeyDown(pContext, wParam);
+	return S_OK;
+}
+
+STDAPI MeowCompositionManager::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+	*pfEaten = OnKeyUp(pContext, wParam);
+	return S_OK;
+}
+
+STDAPI MeowCompositionManager::OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten)
+{
+	/*
+	if (IsEqualGUID(rguid, GUID_PRESERVEDKEY_ONOFF))
+	{
+	BOOL fOpen = _IsKeyboardOpen();
+	_SetKeyboardOpen(fOpen ? FALSE : TRUE);
+	*pfEaten = TRUE;
+	}
+	else
+	{
+	*pfEaten = FALSE;
+	}
+	*/
+	return S_OK;
+}
+
+
 HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition) {
 	// windows want your composition terminated
 	// maybe target app closed or sth
@@ -56,13 +121,6 @@ HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnCompositionTerminated(TfEdit
 	else {
 		
 	}
-	return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord) {
-
-	// called everything when EditSession is done
-	// maybe not necessary in SYNC call
 	return S_OK;
 }
 
@@ -89,6 +147,40 @@ VOID MeowCompositionManager::Switch(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr
 		HRESULT hr = context->RequestEditSession(clientid, mes, TF_ES_SYNC | TF_ES_READWRITE, &hr);
 		mes->Release();
 	}
+
+
+
+
+
+	
+
+	// When DocumentMgr changed, we need to reset the Sinks binded to the DocumentMgr
+	// clear previous Sink
+
+	/* ITfTextEditSink is not used
+	if (_pTextEditSinkContext != NULL && texteditsink_cookie != TF_INVALID_COOKIE)
+	{
+		Meow::UninitTextEditSink(_pTextEditSinkContext, &texteditsink_cookie);
+		_pTextEditSinkContext->Release();
+		_pTextEditSinkContext = NULL;
+	}
+
+	if (pDocMgr == NULL)
+	{
+		return TRUE; // caller just wanted to clear the previous sink
+	}
+
+	// setup a new sink advised to the topmost context of the document
+	if (pDocMgr->GetTop(&_pTextEditSinkContext) == S_OK) {
+		Meow::InitTextEditSink(_pTextEditSinkContext, composition_manager, &texteditsink_cookie);
+		_pTextEditSinkContext->Release();
+		return TRUE;
+	}
+	else {
+		_pTextEditSinkContext = NULL;
+		return FALSE;
+	}
+	*/
 }
 
 BOOL MeowCompositionManager::OnTestKeyDown(ITfContext * context, WPARAM vkey) {
@@ -287,6 +379,7 @@ VOID MeowCompositionManager::DoCompositionSync(TfEditCookie ec) {
 			textservice->window_manager->RefreshCandidate();
 		}
 		
+		/*
 		ITfProperty* property = NULL;
 		if (actioncontext->GetProperty(GUID_PROP_ATTRIBUTE, &property) == S_OK)
 		{
@@ -298,6 +391,7 @@ VOID MeowCompositionManager::DoCompositionSync(TfEditCookie ec) {
 			property->SetValue(ec, range, &var);
 			property->Release();
 		}
+		*/
 
 		range->Release();
 	}

@@ -19,7 +19,9 @@ class MeowTextService;
 // MeowCompositionManager will decide which key to eat, which key to release
 // if ITfContext changed, MeowCompositionManager should be released and recreated
 class MeowCompositionManager:
-	public ITfCompositionSink {
+	public ITfCompositionSink,
+	public ITfTextEditSink,
+	public ITfKeyEventSink {
 public:
 	MeowCompositionManager(TfClientId, MeowTextService *);
 	~MeowCompositionManager();
@@ -29,8 +31,17 @@ public:
 	ULONG STDMETHODCALLTYPE AddRef();
 	ULONG STDMETHODCALLTYPE Release();
 
+	// ITfKeyEventSink
+	HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL fForeground);
+	HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnKeyDown(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext *pic, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext *pic, REFGUID rguid, BOOL *pfEaten);
+	// ITfTextEditSink
+	HRESULT STDMETHODCALLTYPE OnEndEdit(ITfContext *pic, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
+	// ITfCompositionSink
 	HRESULT STDMETHODCALLTYPE OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition);
-	HRESULT STDMETHODCALLTYPE OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
 
 	VOID Switch(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus);
 
@@ -80,6 +91,7 @@ public:
 	ULONG STDMETHODCALLTYPE AddRef();
 	ULONG STDMETHODCALLTYPE Release();
 
+	// ITfEditSession
 	HRESULT STDMETHODCALLTYPE DoEditSession(TfEditCookie ec);
 private:
 	ULONG reference;
