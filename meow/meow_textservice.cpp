@@ -8,9 +8,9 @@ MeowTextService::MeowTextService() {
 	reference = 1;
 	threadmgr = NULL;
 
-	_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
-	_dwThreadFocusSinkCookie = TF_INVALID_COOKIE;
-	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
+	threadmgreventsink_cookie = TF_INVALID_COOKIE;
+	threadfocussink_cookie = TF_INVALID_COOKIE;
+	texteditsink_cookie = TF_INVALID_COOKIE;
 
 	window_manager  = new MeowWindowManager(Meow::hinstance);
 	Meow::DllAddRef();
@@ -106,12 +106,12 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 
 	ULONG_PTR gdiplustoken;
 	Gdiplus::GdiplusStartupInput gdiplusstartupinput;
-	unsigned int x = Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
+	Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusstartupinput, NULL);
 
-	composition_manager = new MeowCompositionManager(clientid, this);
 	candidate_manager = new MeowCandidateManager(this);
+	composition_manager = new MeowCompositionManager(clientid, this);
 
-	if (!_InitThreadMgrEventSink())
+	if (!Meow::InitThreadMgrEventSink(threadmgr, this, &threadmgreventsink_cookie))
 		goto ExitError;
 
 
@@ -136,13 +136,10 @@ HRESULT STDMETHODCALLTYPE MeowTextService::ActivateEx(ITfThreadMgr *pThreadMgr, 
 
 	}
 
-	if (!_InitThreadFocusSink())
+	if (!Meow::InitThreadFocusSink(threadmgr, this, &threadfocussink_cookie))
 		goto ExitError;
 
-	if (!_InitKeyEventSink())
-		goto ExitError;
-
-	if (!_InitPreservedKey())
+	if (!Meow::InitKeyEventSink(threadmgr, this, clientid))
 		goto ExitError;
 
 	if (!_InitDisplayAttributeGuidAtom())
@@ -161,18 +158,12 @@ HRESULT STDMETHODCALLTYPE MeowTextService::Activate(ITfThreadMgr *pThreadMgr, Tf
 }
 HRESULT STDMETHODCALLTYPE MeowTextService::Deactivate() {
 
+	Meow::UninitKeyEventSink(threadmgr, clientid);
+	Meow::UninitThreadFocusSink(threadmgr, &threadfocussink_cookie);
+	Meow::UninitThreadMgrEventSink(threadmgr, &threadmgreventsink_cookie);
 
-	_UninitPreservedKey();
-	_UninitKeyEventSink();
-
-
-	_UninitThreadFocusSink();
-	 _UninitThreadMgrEventSink();
-	// Release ALL refs to threadmgr in Deactivate
-
-
-
-	 delete composition_manager;
+	delete composition_manager;
+	delete candidate_manager;
 
 	if (threadmgr != NULL)
 	{
@@ -194,45 +185,6 @@ HRESULT STDMETHODCALLTYPE MeowTextService::OnKillThreadFocus()
 	return S_OK;
 }
 
-BOOL MeowTextService::_InitThreadFocusSink()
-{
-	ITfSource* pSource = nullptr;
-
-	if (FAILED(threadmgr->QueryInterface(IID_ITfSource, (void **)&pSource)))
-	{
-		return FALSE;
-	}
-
-	if (FAILED(pSource->AdviseSink(IID_ITfThreadFocusSink, (ITfThreadFocusSink *)this, &_dwThreadFocusSinkCookie)))
-	{
-		pSource->Release();
-		return FALSE;
-	}
-
-	pSource->Release();
-
-	return TRUE;
-}
-
-VOID MeowTextService::_UninitThreadFocusSink()
-{
-	ITfSource* pSource = nullptr;
-
-
-	if (FAILED(threadmgr->QueryInterface(IID_ITfSource, (void **)&pSource)))
-	{
-		return;
-	}
-
-
-	if (FAILED(pSource->UnadviseSink(_dwThreadFocusSinkCookie)))
-	{
-		pSource->Release();
-		return;
-	}
-
-	pSource->Release();
-}
 
 STDAPI MeowTextService::OnInitDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
@@ -263,48 +215,6 @@ STDAPI MeowTextService::OnPopContext(ITfContext *pContext)
 	return S_OK;
 }
 
-BOOL MeowTextService::_InitThreadMgrEventSink()
-{
-	ITfSource *pSource;
-	BOOL fRet;
-
-	if (threadmgr->QueryInterface(IID_ITfSource, (void **)&pSource) != S_OK) {
-		return FALSE;
-	}
-
-	fRet = FALSE;
-
-	if (pSource->AdviseSink(IID_ITfThreadMgrEventSink, (ITfThreadMgrEventSink *)this, &_dwThreadMgrEventSinkCookie) != S_OK)
-	{
-		// Don't try to Unadvise _dwThreadMgrEventSinkCookie later
-		_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
-		goto Exit;
-	}
-	fRet = TRUE;
-
-Exit:
-	pSource->Release();
-	return fRet;
-}
-void MeowTextService::_UninitThreadMgrEventSink()
-{
-	ITfSource *pSource;
-
-	if (_dwThreadMgrEventSinkCookie == TF_INVALID_COOKIE) {
-		return; // never Advised
-	}
-
-	if (threadmgr->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK)
-	{
-		pSource->UnadviseSink(_dwThreadMgrEventSinkCookie);
-		pSource->Release();
-	}
-
-	_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
-}
-
-
-
 
 STDAPI MeowTextService::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
 {
@@ -318,22 +228,14 @@ BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
 
 	candidate_manager->SetDocumentMgr(pDocMgr);
-	ITfSource *pSource;
-	BOOL fRet;
 
-	// clear out any previous sink first
-
-	if (_dwTextEditSinkCookie != TF_INVALID_COOKIE)
+	// When DocumentMgr changed, we need to reset the Sinks binded to the DocumentMgr
+	// clear previous Sink
+	if (_pTextEditSinkContext != NULL && texteditsink_cookie != TF_INVALID_COOKIE)
 	{
-		if (_pTextEditSinkContext->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK)
-		{
-
-			pSource->UnadviseSink(_dwTextEditSinkCookie);
-			pSource->Release();
-		}
+		Meow::UninitTextEditSink(_pTextEditSinkContext, &texteditsink_cookie);
 		_pTextEditSinkContext->Release();
 		_pTextEditSinkContext = NULL;
-		_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	}
 
 	if (pDocMgr == NULL)
@@ -342,47 +244,21 @@ BOOL MeowTextService::SyncDocumentMgr(ITfDocumentMgr *pDocMgr)
 	}
 
 	// setup a new sink advised to the topmost context of the document
-
-	if (pDocMgr->GetTop(&_pTextEditSinkContext) != S_OK) {
-
+	if (pDocMgr->GetTop(&_pTextEditSinkContext) == S_OK) {
+		Meow::InitTextEditSink(_pTextEditSinkContext, this, &texteditsink_cookie);
+		_pTextEditSinkContext->Release();
+		return TRUE;
+	} else {
+		_pTextEditSinkContext = NULL;
 		return FALSE;
 	}
-
-	if (_pTextEditSinkContext == NULL) {
-
-		return TRUE; // empty document, no sink possible
-	}
-
-	fRet = FALSE;
-
-	if (_pTextEditSinkContext->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK)
-	{
-		if (pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *)this, &_dwTextEditSinkCookie) == S_OK)
-		{
-			fRet = TRUE;
-		}
-		else
-		{
-			_dwTextEditSinkCookie = TF_INVALID_COOKIE;
-		}
-		pSource->Release();
-	}
-
-	if (fRet == FALSE)
-	{
-		_pTextEditSinkContext->Release();
-		_pTextEditSinkContext = NULL;
-	}
-
-	return fRet;
 }
 
 STDAPI MeowTextService::OnSetFocus(BOOL fForeground)
 {
 	// may need to store and resume composition here
 
-
-	ITfDocumentMgr *pDocMgrFocus;
+	ITfDocumentMgr * pDocMgrFocus;
 	HRESULT hr = threadmgr->GetFocus(&pDocMgrFocus);
 	if ((hr == S_OK) && (pDocMgrFocus != NULL))
 	{
@@ -433,110 +309,7 @@ STDAPI MeowTextService::OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL
 	return S_OK;
 }
 
-//+---------------------------------------------------------------------------
-//
-// _InitKeyEventSink
-//
-// Advise a keystroke sink.
-//----------------------------------------------------------------------------
 
-BOOL MeowTextService::_InitKeyEventSink()
-{
-	ITfKeystrokeMgr *pKeystrokeMgr;
-	HRESULT hr;
-
-	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&pKeystrokeMgr) != S_OK) {
-		return FALSE;
-	}
-
-	hr = pKeystrokeMgr->AdviseKeyEventSink(clientid, (ITfKeyEventSink *)this, TRUE);
-	if (hr != S_OK) {
-	}
-	pKeystrokeMgr->Release();
-
-	return (hr == S_OK);
-}
-
-//+---------------------------------------------------------------------------
-//
-// _UninitKeyEventSink
-//
-// Unadvise a keystroke sink.  Assumes a sink has been advised already.
-//----------------------------------------------------------------------------
-
-void MeowTextService::_UninitKeyEventSink()
-{
-	ITfKeystrokeMgr *pKeystrokeMgr;
-
-	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&pKeystrokeMgr) != S_OK)
-		return;
-
-	pKeystrokeMgr->UnadviseKeyEventSink(clientid);
-
-	pKeystrokeMgr->Release();
-}
-
-//+---------------------------------------------------------------------------
-//
-// _InitPreservedKey
-//
-// Register a hot key.
-//----------------------------------------------------------------------------
-
-BOOL MeowTextService::_InitPreservedKey()
-{
-	ITfKeystrokeMgr *pKeystrokeMgr;
-
-	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&pKeystrokeMgr) != S_OK)
-		return FALSE;
-	/*
-	HRESULT hr;
-	// register Alt+~ key
-	hr = pKeystrokeMgr->PreserveKey(_tfClientId,
-		GUID_PRESERVEDKEY_ONOFF,
-		&c_pkeyOnOff0,
-		c_szPKeyOnOff,
-		wcslen(c_szPKeyOnOff));
-
-	// register KANJI key
-	hr = pKeystrokeMgr->PreserveKey(_tfClientId,
-		GUID_PRESERVEDKEY_ONOFF,
-		&c_pkeyOnOff1,
-		c_szPKeyOnOff,
-		wcslen(c_szPKeyOnOff));
-
-	// register F6 key
-	hr = pKeystrokeMgr->PreserveKey(_tfClientId,
-		GUID_PRESERVEDKEY_F6,
-		&c_pkeyF6,
-		c_szPKeyF6,
-		wcslen(c_szPKeyF6));
-		*/
-	pKeystrokeMgr->Release();
-
-	return TRUE;
-}
-
-//+---------------------------------------------------------------------------
-//
-// _UninitPreservedKey
-//
-// Uninit a hot key.
-//----------------------------------------------------------------------------
-
-void MeowTextService::_UninitPreservedKey()
-{
-	ITfKeystrokeMgr *pKeystrokeMgr;
-
-	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&pKeystrokeMgr) != S_OK)
-		return;
-
-	//pKeystrokeMgr->UnpreserveKey(GUID_PRESERVEDKEY_ONOFF, &c_pkeyOnOff0);
-	//pKeystrokeMgr->UnpreserveKey(GUID_PRESERVEDKEY_ONOFF, &c_pkeyOnOff1);
-	//pKeystrokeMgr->UnpreserveKey(GUID_PRESERVEDKEY_F6, &c_pkeyF6);
-
-	pKeystrokeMgr->Release();
-}
 
 BOOL MeowTextService::_InitDisplayAttributeGuidAtom()
 {
@@ -600,4 +373,121 @@ STDAPI MeowTextService::GetDisplayAttributeInfo(__RPC__in REFGUID guidInfo, __RP
 		return E_INVALIDARG;
 	}
 	return S_OK;
+}
+
+BOOL Meow::InitThreadMgrEventSink(ITfThreadMgr * threadmgr, ITfThreadMgrEventSink * punk, DWORD * cookie)
+{
+	ITfSource * source = NULL;
+	if (threadmgr->QueryInterface(IID_ITfSource, (void **)&source) == S_OK)
+	{
+		HRESULT hr;
+		hr = source->AdviseSink(IID_ITfThreadMgrEventSink, punk, cookie);
+		source->Release();
+
+		if (hr != S_OK) {
+			*cookie = TF_INVALID_COOKIE;
+			return FALSE;
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+VOID Meow::UninitThreadMgrEventSink(ITfThreadMgr * threadmgr, DWORD * cookie)
+{
+	ITfSource * source;
+	if (*cookie == TF_INVALID_COOKIE) { return; }
+	if (threadmgr->QueryInterface(IID_ITfSource, (void **)&source) == S_OK)
+	{
+		source->UnadviseSink(*cookie);
+		source->Release();
+	}
+	*cookie = TF_INVALID_COOKIE;
+}
+
+BOOL Meow::InitThreadFocusSink(ITfThreadMgr * threadmgr, ITfThreadFocusSink * punk, DWORD * cookie)
+{
+	ITfSource * source = NULL;
+	if (threadmgr->QueryInterface(IID_ITfSource, (void **)&source) == S_OK)
+	{
+		HRESULT hr;
+		hr = source->AdviseSink(IID_ITfThreadFocusSink, punk, cookie);
+		source->Release();
+
+		if (hr != S_OK) {
+			*cookie = TF_INVALID_COOKIE;
+			return FALSE;
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+VOID Meow::UninitThreadFocusSink(ITfThreadMgr * threadmgr, DWORD * cookie)
+{
+	ITfSource * source;
+	if (*cookie == TF_INVALID_COOKIE) { return; }
+	if (threadmgr->QueryInterface(IID_ITfSource, (void **)&source) == S_OK)
+	{
+		source->UnadviseSink(*cookie);
+		source->Release();
+	}
+	*cookie = TF_INVALID_COOKIE;
+}
+
+BOOL Meow::InitKeyEventSink(ITfThreadMgr * threadmgr, ITfKeyEventSink * punk, TfClientId clientid)
+{
+	ITfKeystrokeMgr * keystrokemgr = NULL;
+	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&keystrokemgr) == S_OK)
+	{
+		HRESULT hr;
+		hr = keystrokemgr->AdviseKeyEventSink(clientid, punk, TRUE);
+		keystrokemgr->Release();
+
+		// hr = keystrokemgr->PreserveKey();
+
+		return (hr == S_OK);
+	}
+	return FALSE;
+}
+
+VOID Meow::UninitKeyEventSink(ITfThreadMgr * threadmgr, TfClientId clientid)
+{
+	ITfKeystrokeMgr * keystrokemgr;
+	if (threadmgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&keystrokemgr) == S_OK)
+	{
+		keystrokemgr->UnadviseKeyEventSink(clientid);
+		// keystrokemgr->UnpreserveKey();
+		keystrokemgr->Release();
+	}
+}
+
+BOOL Meow::InitTextEditSink(ITfContext * context, ITfTextEditSink * punk, DWORD * cookie)
+{
+	ITfSource * source = NULL;
+	if (context->QueryInterface(IID_ITfSource, (void **)&source) == S_OK)
+	{
+		HRESULT hr;
+		hr = source->AdviseSink(IID_ITfTextEditSink, punk, cookie);
+		source->Release();
+
+		if (hr != S_OK) {
+			*cookie = TF_INVALID_COOKIE;
+			return FALSE;
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+VOID Meow::UninitTextEditSink(ITfContext * context, DWORD * cookie)
+{
+	ITfSource * source;
+	if (*cookie == TF_INVALID_COOKIE) { return; }
+	if (context->QueryInterface(IID_ITfSource, (void **)&source) == S_OK)
+	{
+		source->UnadviseSink(*cookie);
+		source->Release();
+	}
+	*cookie = TF_INVALID_COOKIE;
 }

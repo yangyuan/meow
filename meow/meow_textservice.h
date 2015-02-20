@@ -60,34 +60,45 @@ public:
 	MeowWindowManager *      window_manager;
 	MeowCompositionManager * composition_manager;
 	MeowCandidateManager *   candidate_manager;
+
 	ITfThreadMgr * threadmgr;
+	TfClientId clientid;
 
 	TfGuidAtom displayattribute;
 private:
 	ULONG reference;
-	TfClientId clientid;
+
 	DWORD flags;
 
-	DWORD _dwThreadMgrEventSinkCookie;
-	BOOL _InitThreadMgrEventSink();
-	void _UninitThreadMgrEventSink();
+	DWORD threadmgreventsink_cookie;
+	DWORD threadfocussink_cookie;
+	DWORD texteditsink_cookie;
 
-	DWORD _dwThreadFocusSinkCookie;
-	BOOL _InitThreadFocusSink();
-	VOID _UninitThreadFocusSink();
 
 
 	// initialize TextEditSink.
-	ITfContext   *_pTextEditSinkContext;
-	DWORD _dwTextEditSinkCookie;
+	ITfContext * _pTextEditSinkContext;
 	BOOL SyncDocumentMgr(ITfDocumentMgr *pDocMgr);
 
-	// initialize and uninitialize KeyEventSink.
-	BOOL _InitKeyEventSink();
-	void _UninitKeyEventSink();
-	BOOL _InitPreservedKey();
-	void _UninitPreservedKey();
 
 	BOOL _InitDisplayAttributeGuidAtom();
 };
+
+namespace Meow {
+	// ThreadMgrEventSink
+	BOOL InitThreadMgrEventSink(ITfThreadMgr * threadmgr, ITfThreadMgrEventSink * punk, DWORD * cookie);
+	VOID UninitThreadMgrEventSink(ITfThreadMgr * threadmgr, DWORD * cookie);
+	// ThreadFocusSink
+	BOOL InitThreadFocusSink(ITfThreadMgr * threadmgr, ITfThreadFocusSink * punk, DWORD * cookie);
+	VOID UninitThreadFocusSink(ITfThreadMgr * threadmgr, DWORD * cookie);
+	// KeyEventSink
+	BOOL InitKeyEventSink(ITfThreadMgr * threadmgr, ITfKeyEventSink * punk, TfClientId clientid);
+	VOID UninitKeyEventSink(ITfThreadMgr * threadmgr, TfClientId clientid);
+	// KeyEventSink
+	BOOL InitKeyEventSink(ITfThreadMgr * threadmgr, ITfKeyEventSink * punk, TfClientId clientid);
+	VOID UninitKeyEventSink(ITfThreadMgr * threadmgr, TfClientId clientid);
+	// TextEditSink
+	BOOL InitTextEditSink(ITfContext * context, ITfTextEditSink * punk, DWORD * cookie);
+	VOID UninitTextEditSink(ITfContext * context, DWORD * cookie);
+}
 

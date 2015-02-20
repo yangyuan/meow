@@ -68,11 +68,18 @@ HRESULT STDMETHODCALLTYPE MeowCompositionManager::OnEndEdit(ITfContext *pContext
 
 
 VOID MeowCompositionManager::Switch(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus) {
+	// one program can only have one focus ITfDocumentMgr
+
 	if (action != MEOW_CA_NULL) {
 		action = MEOW_CA_NULL; // stop all actions
 	}
 
 	if (pDocMgrPrevFocus != NULL) {
+
+		// BUG:
+		// COMMIT should only happen if there is a remain composition
+
+		// sometimes pDocMgrPrevFocus may already released
 		ITfContext * context;
 		pDocMgrPrevFocus->GetTop(&context);
 		// FIXME: current context may not be the top, needs to handle sth here.
@@ -179,6 +186,8 @@ BOOL MeowCompositionManager::ProcessKeyStroke(ITfContext * context, WPARAM vkey,
 VOID MeowCompositionManager::DoEditSessionAction(TfEditCookie ec) {
 	// currently this function is called sync-ly
 	// I think it is safer to use an action list to manager pending actions
+
+	// CREATE -> SYNC -> SYNC -> COMMIT
 	switch (action) {
 	case MEOW_CA_CREATE:
 		DoCompositionBegin(ec);

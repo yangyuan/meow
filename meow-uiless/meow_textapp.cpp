@@ -21,13 +21,31 @@ MeowTextApp::MeowTextApp(HWND _hwnd)
 	CComPtr<ITfSource> source;
 	hr = uielementmgr->QueryInterface(IID_ITfSource, (LPVOID*)&source);
 	hr = source->AdviseSink(IID_ITfUIElementSink, (ITfUIElementSink*)this, &uielementsinkcookie);
-	/*
+	
 	CComPtr<ITfDocumentMgr> documentmgr;
 	CComPtr<ITfContext> context;
 	hr = threadmgr->CreateDocumentMgr(&documentmgr);
 	documentmgr->CreateContext(clientid, 0, (ITfContextOwnerCompositionSink*)this, &context, &editcookie);
+	threadmgr->SetFocus(documentmgr);
 	documentmgr->Push(context);
-	threadmgr->SetFocus(documentmgr);*/
+
+	/*
+	ITfContext * contentx;
+	documentmgr->GetTop(&contentx);
+
+	contentx->AddRef();
+	ULONG x = contentx->Release();
+
+
+	documentmgr->GetTop(&contentx);
+	documentmgr->GetTop(&contentx);
+	documentmgr->GetTop(&contentx);
+	documentmgr->GetTop(&contentx);
+
+
+	contentx->AddRef();
+	x = contentx->Release();
+	*/
 }
 
 VOID MeowTextApp::SetFocus() {
