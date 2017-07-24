@@ -1,9 +1,9 @@
 tools
 
-
-Debug/
-Release/
-ipch/
+.vs
+Debug
+Release
+ipch
 *.opensdf
 *.sdf
 *.suo
